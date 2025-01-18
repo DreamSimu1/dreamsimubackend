@@ -2,7 +2,7 @@ import Vision from "../models/visionModel.js";
 import cloudinary from "cloudinary";
 import dotenv from "dotenv";
 import multer from "multer";
-
+import mongoose from "mongoose";
 dotenv.config();
 
 // Cloudinary config
@@ -81,13 +81,44 @@ export const createVision = async (req, res) => {
 //     });
 //   }
 // };
+
+// export const getAllVisions = async (req, res) => {
+//   try {
+//     // Ensure the user's ID is present from the authentication middleware
+//     const userId = req.user.userId;
+
+//     // Convert the userId to ObjectId to match the stored userId in the database
+//     const objectIdUserId = mongoose.Types.ObjectId(userId);
+
+//     // Fetch visions created by this user
+//     const visions = await Vision.find({ createdBy: objectIdUserId });
+
+//     res.status(200).json(visions);
+//   } catch (error) {
+//     console.error("Error fetching visions:", error);
+//     res.status(500).json({
+//       message: "Failed to fetch visions",
+//     });
+//   }
+// };
+
 export const getAllVisions = async (req, res) => {
   try {
-    // Ensure the user's ID is present from the authentication middleware
+    // Get the userId from the authentication middleware (JWT token)
     const userId = req.user.userId;
+    console.log("Fetching visions for userId:", userId);
 
     // Fetch visions created by this user
-    const visions = await Vision.find({ createdBy: userId });
+    const visions = await Vision.find({ userId: userId });
+
+    // Check if any visions are returned
+    if (visions.length === 0) {
+      console.log("No visions found for userId:", userId);
+    } else {
+      console.log("Visions fetched:", visions);
+    }
+
+    // Return the fetched visions
     res.status(200).json(visions);
   } catch (error) {
     console.error("Error fetching visions:", error);
@@ -96,7 +127,6 @@ export const getAllVisions = async (req, res) => {
     });
   }
 };
-
 // Get a single vision
 export const getSingleVision = async (req, res) => {
   const { id } = req.params;

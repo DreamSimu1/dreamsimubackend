@@ -41,7 +41,11 @@ const __dirname = dirname(__filename);
 
 // Configure CORS
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://dreamsimu.vercel.app"], // specify your client's URL
+  origin: [
+    "http://localhost:3000",
+    "https://dreamsimu.vercel.app",
+    "https://dreamsimuweb.vercel.app/login",
+  ], // specify your client's URL
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
