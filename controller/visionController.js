@@ -70,9 +70,24 @@ export const createVision = async (req, res) => {
 };
 
 // Get all visions
+// export const getAllVisions = async (req, res) => {
+//   try {
+//     const visions = await Vision.find();
+//     res.status(200).json(visions);
+//   } catch (error) {
+//     console.error("Error fetching visions:", error);
+//     res.status(500).json({
+//       message: "Failed to fetch visions",
+//     });
+//   }
+// };
 export const getAllVisions = async (req, res) => {
   try {
-    const visions = await Vision.find();
+    // Ensure the user's ID is present from the authentication middleware
+    const userId = req.user.userId;
+
+    // Fetch visions created by this user
+    const visions = await Vision.find({ createdBy: userId });
     res.status(200).json(visions);
   } catch (error) {
     console.error("Error fetching visions:", error);

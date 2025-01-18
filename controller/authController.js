@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
 // import nodemailer from "nodemailer";
 // import crypto from "crypto";
 
@@ -38,21 +39,27 @@ import jwt from "jsonwebtoken";
 //     next(error);
 //   }
 // };
+// authController.js
+
 export const signUp = async (req, res, next) => {
   const { fullname, email, password, phone, address } = req.body;
+  console.log("Request body:", req.body); // Log the incoming request body
+  console.log("Request headers:", req.headers); // Log the headers for debugging
 
   // Validate mandatory fields
   if (!fullname || !email || !password) {
-    return next(
-      new ErrorResponse("Fullname, email, and password are required", 400)
-    );
+    const error = new Error("Fullname, email, and password are required");
+    error.status = 400;
+    return next(error);
   }
 
   try {
     // Check if email is already registered
     const userExist = await User.findOne({ email });
     if (userExist) {
-      return next(new ErrorResponse("E-mail already registered", 400));
+      const error = new Error("E-mail already registered");
+      error.status = 400;
+      return next(error);
     }
 
     // Hash password
