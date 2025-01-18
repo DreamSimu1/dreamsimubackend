@@ -5,25 +5,72 @@ import jwt from "jsonwebtoken";
 // import nodemailer from "nodemailer";
 // import crypto from "crypto";
 
+// export const signUp = async (req, res, next) => {
+//   const { email } = req.body;
+//   const userExist = await User.findOne({ email });
+//   if (userExist) {
+//     return next(new ErrorResponse("E-mail already registered", 400));
+//   }
+//   const salt = await bcrypt.genSalt(10);
+//   const hashedPassword = await bcrypt.hash(req.body.password, salt);
+//   const newUser = new User({
+//     fullname: req.body.fullname,
+//     email: req.body.email,
+//     phone: req.body.phone,
+//     address: req.body.address,
+//     password: hashedPassword,
+//   });
+//   try {
+//     const user = await newUser.save();
+
+//     // Generate a JWT token
+//     const token = jwt.sign(
+//       { id: user._id, isAdmin: user.isAdmin },
+//       process.env.JWT_SECRET
+//     );
+
+//     res.status(201).json({
+//       success: true,
+//       user,
+//       token, // Include the generated token in the response
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 export const signUp = async (req, res, next) => {
-  const { email } = req.body;
-  const userExist = await User.findOne({ email });
-  if (userExist) {
-    return next(new ErrorResponse("E-mail already registered", 400));
+  const { fullname, email, password, phone, address } = req.body;
+
+  // Validate mandatory fields
+  if (!fullname || !email || !password) {
+    return next(
+      new ErrorResponse("Fullname, email, and password are required", 400)
+    );
   }
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(req.body.password, salt);
-  const newUser = new User({
-    fullname: req.body.fullname,
-    email: req.body.email,
-    phone: req.body.phone,
-    address: req.body.address,
-    password: hashedPassword,
-  });
+
   try {
+    // Check if email is already registered
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      return next(new ErrorResponse("E-mail already registered", 400));
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const newUser = new User({
+      fullname,
+      email,
+      password: hashedPassword,
+      phone, // Optional
+      address, // Optional
+    });
+
     const user = await newUser.save();
 
-    // Generate a JWT token
+    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET
@@ -32,7 +79,7 @@ export const signUp = async (req, res, next) => {
     res.status(201).json({
       success: true,
       user,
-      token, // Include the generated token in the response
+      token,
     });
   } catch (error) {
     next(error);
