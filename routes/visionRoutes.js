@@ -1,20 +1,3 @@
-// import express from "express";
-// import {
-//   getallUsers,
-//   getUsers,
-//   loginUser,
-//   register,
-// } from "../controller/visionController.js";
-// import authenticateUser from "../middleware/authMiddleware.js";
-
-// const router = express.Router();
-
-// router.post("/create-vision");
-// router.post("/edit-vision");
-// router.get("/get-single");
-// router.get("/get-all");
-
-// export default router;
 import express from "express";
 import {
   createVision,
