@@ -1,30 +1,101 @@
 import Vision from "../models/visionModel.js";
 import cloudinary from "cloudinary";
+import { S3Client } from "@aws-sdk/client-s3";
+import multerS3 from "multer-s3";
 import dotenv from "dotenv";
 import multer from "multer";
 import mongoose from "mongoose";
+// dotenv.config();
+
 dotenv.config();
 
-// Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_KEY,
-  api_secret: process.env.CLOUD_KEY_SECRET,
-});
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Define your directory where the file will be saved temporarily
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname); // Use a unique filename for each upload
+// AWS S3 Configuration
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
 
-const upload = multer({ storage: storage });
+// Set up multer with multer-s3 for direct S3 upload
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: "eduprosolution",
+    acl: "private", // Set access control list for the uploaded file
+    contentType: multerS3.AUTO_CONTENT_TYPE, // Automatically set the content type
+    key: (req, file, cb) => {
+      const fileKey = `visions/${Date.now()}-${file.originalname}`; // Unique filename
+      cb(null, fileKey); // Upload to "visions" folder in the S3 bucket
+    },
+  }),
+});
+
+// // Cloudinary config
+// cloudinary.config({
+//   cloud_name: process.env.CLOUD_NAME,
+//   api_key: process.env.CLOUD_KEY,
+//   api_secret: process.env.CLOUD_KEY_SECRET,
+// });
+
+// // Set up multer for file uploads
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "uploads/"); // Define your directory where the file will be saved temporarily
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + "-" + file.originalname); // Use a unique filename for each upload
+//   },
+// });
+
+// const upload = multer({ storage: storage });
 
 // Cloudinary upload handler function
+// export const createVision = async (req, res) => {
+//   const { title, affirmation, statement, visibility } = req.body;
+//   const { userId } = req.user; // Assuming you're using JWT authentication to get the user ID
+
+//   try {
+//     let imageUrl = "";
+
+//     // Handle image upload to Cloudinary (only if file is sent)
+//     if (req.file) {
+//       // Check if the file is received via multer
+//       const result = await cloudinary.v2.uploader.upload(req.file.path, {
+//         // Use multer's temporary file path
+//         folder: "visions",
+//         use_filename: true,
+//       });
+//       imageUrl = result.secure_url; // Cloudinary URL for the image
+//     } else {
+//       console.log("No image uploaded");
+//     }
+
+//     // Save Vision to Database
+//     const vision = new Vision({
+//       title,
+//       affirmation,
+//       statement,
+//       visibility,
+//       imageUrl,
+//       userId,
+//     });
+
+//     await vision.save();
+
+//     res.status(201).json({
+//       message: "Vision created successfully",
+//       vision,
+//     });
+//   } catch (error) {
+//     console.error("Error creating vision:", error);
+//     res.status(500).json({
+//       message: "Failed to create vision",
+//     });
+//   }
+// };
+
 export const createVision = async (req, res) => {
   const { title, affirmation, statement, visibility } = req.body;
   const { userId } = req.user; // Assuming you're using JWT authentication to get the user ID
@@ -32,15 +103,9 @@ export const createVision = async (req, res) => {
   try {
     let imageUrl = "";
 
-    // Handle image upload to Cloudinary (only if file is sent)
+    // Handle image upload to AWS S3 (only if file is sent)
     if (req.file) {
-      // Check if the file is received via multer
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        // Use multer's temporary file path
-        folder: "visions",
-        use_filename: true,
-      });
-      imageUrl = result.secure_url; // Cloudinary URL for the image
+      imageUrl = req.file.location; // S3 URL of the uploaded file
     } else {
       console.log("No image uploaded");
     }
@@ -68,7 +133,6 @@ export const createVision = async (req, res) => {
     });
   }
 };
-
 // Get all visions
 // export const getAllVisions = async (req, res) => {
 //   try {
