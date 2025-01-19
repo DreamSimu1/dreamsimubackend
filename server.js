@@ -1,6 +1,7 @@
 import express from "express";
 import visionRoutes from "./routes/visionRoutes.js";
 import refineRoute from "./routes/refineRoute.js";
+import sprintRoute from "./routes/sprintRoute.js";
 import pointRoute from "./routes/pointRoute.js";
 import disbursementRoute from "./routes/disbursementRoute.js";
 import ideaRoute from "./routes/ideaRoute.js";
@@ -42,7 +43,7 @@ const __dirname = dirname(__filename);
 // Configure CORS
 const corsOptions = {
   origin: [
-    "http://localhost:3000",
+    "http://localhost:3002",
     "https://dreamsimu.vercel.app",
     "https://dreamsimuweb.vercel.app",
   ], // specify your client's URL
@@ -62,6 +63,7 @@ app.use("/api", authRoute);
 app.use("/api", visionRoutes);
 app.use("/api", ideaRoute);
 app.use("/api", refineRoute);
+app.use("/api", sprintRoute);
 app.use("/api/", OffRoutes);
 app.use("/api/", noticeRoute);
 app.use("/api/", receiptRoute);
@@ -76,5 +78,5 @@ app.use("/api/", disbursementRoute);
 // app.use("/api/", commonRoute(s3));
 
 // app.use("/api/", commonRoute(s3));
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, console.log(`Server running on port ${PORT}`));
