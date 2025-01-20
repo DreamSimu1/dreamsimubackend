@@ -31,15 +31,6 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// const uploadDir = path.join(__dirname, "uploads");
-
-// const uploadDir = path.join(process.cwd(), "uploads");
-
-// app.use("/uploads", express.static(uploadDir));
-
-// Update the AWS SDK configuration
-// Update the AWS SDK configuration
-
 // Configure CORS
 const corsOptions = {
   origin: [
