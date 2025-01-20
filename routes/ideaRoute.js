@@ -4,6 +4,7 @@ import {
   createIdea,
   deleteIdea,
   getIdeasByVision,
+  updateIdea,
 } from "../controller/ideaController.js";
 import authenticateUser from "../middleware/authMiddleware.js";
 import multer from "multer";
@@ -56,7 +57,7 @@ router.post(
   createIdea
 );
 router.get("/ideas/:visionId", authenticateUser, getIdeasByVision);
-
+router.put("/editidea/:id", authenticateUser, updateIdea);
 // Delete an idea
 router.delete("/:id", authenticateUser, deleteIdea);
 

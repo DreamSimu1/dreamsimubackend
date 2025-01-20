@@ -255,3 +255,55 @@ export const getIdeasByVision = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const updateIdea = async (req, res) => {
+  const { id } = req.params;
+  const { title, description, status, visionId } = req.body;
+
+  // Validate the input data
+  if (!title || !description || !status || !visionId) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const validStatuses = ["InProgress", "Refinement", "Completed"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
+
+  try {
+    // Find the idea by ID
+    const idea = await Idea.findById(id);
+    if (!idea) {
+      return res.status(404).json({ message: "Idea not found" });
+    }
+
+    // Ensure only the creator can edit the idea
+    if (idea.createdBy.toString() !== req.user._id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to edit this idea" });
+    }
+
+    // Update the idea
+    idea.title = title;
+    idea.description = description;
+    idea.status = status;
+    idea.visionId = visionId;
+
+    // If a new image is uploaded, handle the image update
+    if (req.file) {
+      idea.imageUrl = req.file.location; // AWS S3 URL or Cloudinary URL
+    }
+
+    // Save the updated idea
+    await idea.save();
+
+    res.status(200).json({
+      message: "Idea updated successfully",
+      idea,
+    });
+  } catch (error) {
+    console.error("Error updating idea:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
