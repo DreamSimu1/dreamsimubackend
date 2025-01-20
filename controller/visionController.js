@@ -225,3 +225,60 @@ export const getSingleVisionByTitle = async (req, res) => {
     });
   }
 };
+
+export const editVision = async (req, res) => {
+  const { id } = req.params; // Get the Vision ID from the request params
+  const { title, affirmation, statement, visibility } = req.body; // Get updated data from the request body
+  const { userId } = req.user; // Assuming you're using JWT authentication
+
+  try {
+    // Find the Vision by ID and check ownership
+    const vision = await Vision.findOne({ _id: id, userId });
+    if (!vision) {
+      return res
+        .status(404)
+        .json({ message: "Vision not found or unauthorized" });
+    }
+
+    // Update fields if provided
+    if (title) vision.title = title;
+    if (affirmation) vision.affirmation = affirmation;
+    if (statement) vision.statement = statement;
+    if (visibility) vision.visibility = visibility;
+
+    // Handle image upload if a new image is provided
+    if (req.file) {
+      vision.imageUrl = req.file.location; // Update the image URL with the new file
+    }
+
+    await vision.save();
+
+    res.status(200).json({ message: "Vision updated successfully", vision });
+  } catch (error) {
+    console.error("Error updating vision:", error);
+    res.status(500).json({ message: "Failed to update vision" });
+  }
+};
+
+export const deleteVision = async (req, res) => {
+  const { id } = req.params; // Get the Vision ID from the request params
+  const { userId } = req.user; // Assuming you're using JWT authentication
+
+  try {
+    // Find the Vision by ID and check ownership
+    const vision = await Vision.findOne({ _id: id, userId });
+    if (!vision) {
+      return res
+        .status(404)
+        .json({ message: "Vision not found or unauthorized" });
+    }
+
+    // Delete Vision from the database
+    await Vision.deleteOne({ _id: id });
+
+    res.status(200).json({ message: "Vision deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting vision:", error);
+    res.status(500).json({ message: "Failed to delete vision" });
+  }
+};

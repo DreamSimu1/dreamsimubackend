@@ -4,6 +4,8 @@ import {
   getSingleVision,
   getAllVisions,
   getSingleVisionByTitle,
+  editVision,
+  deleteVision,
 } from "../controller/visionController.js";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
@@ -70,6 +72,16 @@ router.get(
   authenticateUser,
   getSingleVisionByTitle
 );
+// Edit Vision Route
+router.put(
+  "/editvision/:id",
+  upload.single("image"), // Optional file upload for image updates
+  authenticateUser,
+  editVision
+);
+
+// Delete Vision Route
+router.delete("/vision/:id", authenticateUser, deleteVision);
 
 // Get All Visions Route
 router.get("/get-all", authenticateUser, getAllVisions);
