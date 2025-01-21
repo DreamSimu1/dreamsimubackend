@@ -4,24 +4,35 @@ const SprintSchema = new mongoose.Schema(
   {
     day: {
       type: String,
-      required: [true, "Title is required"],
+      required: true,
       trim: true,
     },
     activity: {
       type: String,
-      required: [true, "Description is required"],
+      required: true,
     },
 
     refineId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Refine",
-      required: [true, "Refine ID is required"],
+      required: true,
     },
     // visionId: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "Vision",
     //   required: [true, "Vision ID is required"],
     // },
+    tasks: [
+      {
+        title: { type: String, required: true },
+        description: { type: String },
+        status: {
+          type: String,
+          enum: ["todo", "inProgress", "completed"],
+          default: "todo",
+        },
+      },
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

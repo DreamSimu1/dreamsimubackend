@@ -4,6 +4,8 @@ import {
   deleteSprint,
   getSprintByRefineTitlt,
   getSprintsByRefine,
+  getTask,
+  saveTask,
 } from "../controller/sprintController.js";
 import authenticateUser from "../middleware/authMiddleware.js";
 
@@ -11,6 +13,11 @@ const router = express.Router();
 
 // Create a sprint
 router.post("/sprints", authenticateUser, createSprint);
+
+router.post("/save-task", authenticateUser, saveTask);
+
+router.get("/tasks", authenticateUser, getTask);
+
 router.get(
   "/sprint-by-refine-activity",
   authenticateUser,

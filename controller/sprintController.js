@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import cloudinary from "cloudinary";
 import multer from "multer";
 import Sprint from "../models/sprintModel.js"; // Assuming the Sprint model exists
+import Task from "../models/taskModel.js"; // Assuming the Sprint model exists
 import Refine from "../models/refineModel.js"; // Assuming the Refine model exists
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
@@ -17,14 +18,55 @@ cloudinary.config({
 });
 
 // Create a sprint
+// export const createSprint = async (req, res) => {
+//   const { day, activity, refineId } = req.body;
+//   console.log(req.body); // Check the fields in the body
+//   console.log(req.file); // Check if the file is coming through correctly
+
+//   // Validate all required fields
+//   if (!day || !activity || !refineId) {
+//     return res.status(400).json({ message: "All fields are required" });
+//   }
+
+//   // Validate refineId before querying the database
+//   if (!mongoose.Types.ObjectId.isValid(refineId)) {
+//     return res.status(400).json({ message: "Invalid Refine ID" });
+//   }
+
+//   try {
+//     // Check if the refine exists
+//     const refine = await Refine.findById(refineId);
+//     if (!refine) {
+//       return res.status(404).json({ message: "Refine not found" });
+//     }
+
+//     // Create the sprint
+//     const sprint = await Sprint.create({
+//       day,
+//       activity,
+//       refineId,
+//       createdBy: req.user.userId, // Ensure `req.user.userId` is populated by the auth middleware
+//     });
+
+//     res.status(201).json({
+//       message: "Sprint created successfully",
+//       sprint,
+//     });
+//   } catch (error) {
+//     console.error("Error creating sprint:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+// Create a sprint
 export const createSprint = async (req, res) => {
-  const { day, activity, refineId } = req.body;
+  const { day, activity, refineId, tasks } = req.body; // Tasks will be added in the request body
   console.log(req.body); // Check the fields in the body
-  console.log(req.file); // Check if the file is coming through correctly
 
   // Validate all required fields
-  if (!day || !activity || !refineId) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (!day || !activity || !refineId || !tasks || tasks.length === 0) {
+    return res.status(400).json({
+      message: "All fields are required and tasks should not be empty",
+    });
   }
 
   // Validate refineId before querying the database
@@ -44,6 +86,7 @@ export const createSprint = async (req, res) => {
       day,
       activity,
       refineId,
+      tasks: tasks, // Store the tasks for the specific day
       createdBy: req.user.userId, // Ensure `req.user.userId` is populated by the auth middleware
     });
 
@@ -56,6 +99,91 @@ export const createSprint = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const getTask = async (req, res) => {
+  const { activity } = req.query; // You can send the activity as a query parameter
+
+  console.log("Activity:", activity); // Log the activity value
+
+  if (!activity) {
+    return res.status(400).json({ message: "Activity is required" });
+  }
+
+  try {
+    // Find tasks by user and activity
+    const tasks = await Task.find({
+      createdBy: req.user.userId, // Get tasks created by the authenticated user
+      activity: activity, // Filter by activity
+    }).sort({ day: 1 }); // Optionally, sort by day
+
+    console.log("Tasks found:", tasks); // Log the tasks retrieved
+
+    if (tasks.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No tasks found for this activity" });
+    }
+
+    res.status(200).json({ tasks });
+  } catch (error) {
+    console.error("Error retrieving tasks:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const saveTask = async (req, res) => {
+  const { title, day, activities } = req.body; // Destructure 'title' instead of 'task'
+
+  // Log the received data to check if it's being sent correctly
+  console.log("Received task data:", req.body); // Debugging line
+
+  if (!title || !day || !activities) {
+    return res
+      .status(400)
+      .json({ message: "Title, day, and activities are required" });
+  }
+
+  try {
+    // Save the task for the activity (or update if it exists)
+    const newTask = await Task.create({
+      title: title, // Use 'title' here instead of 'task.title'
+      day,
+      activity: activities,
+      createdBy: req.user.userId, // Assume authentication middleware sets userId
+    });
+
+    res.status(201).json({ message: "Task saved successfully", task: newTask });
+  } catch (error) {
+    console.error("Error saving task:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// GET API to fetch all sprints by activity
+export const getSprintsByActivity = async (req, res) => {
+  const { activities } = req.query;
+  const decodedActivities = decodeURIComponent(activities); // Decode activity name if needed
+
+  try {
+    // Fetch sprints related to the decoded activity
+    const sprints = await Sprint.find({ activity: decodedActivities }).populate(
+      "refineId"
+    );
+    if (sprints.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No sprints found for this activity" });
+    }
+
+    res.status(200).json({
+      message: "Sprints fetched successfully",
+      sprints,
+    });
+  } catch (error) {
+    console.error("Error fetching sprints:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getSprintByRefineTitlt = async (req, res) => {
   try {
     const { activities } = req.query;
@@ -63,8 +191,6 @@ export const getSprintByRefineTitlt = async (req, res) => {
     if (!activities) {
       return res.status(400).json({ message: "Activities is required" });
     }
-
-    console.log("Activities query parameter:", activities);
 
     // Step 1: Find the refine document by activities
     const refine = await Refine.findOne({ activities }); // Fixed field name

@@ -62,6 +62,6 @@ router.get("/get-single-idea/:id", authenticateUser, getIdeaById);
 router.get("/ideas/:visionId", authenticateUser, getIdeasByVision);
 router.put("/editidea/:id", authenticateUser, updateIdea);
 // Delete an idea
-router.delete("/:id", authenticateUser, deleteIdea);
+router.delete("/idea/:id", authenticateUser, deleteIdea);
 
 export default router;

@@ -215,8 +215,7 @@ export const deleteIdea = async (req, res) => {
       return res.status(404).json({ message: "Idea not found" });
     }
 
-    // Ensure only the creator can delete the idea
-    if (idea.createdBy.toString() !== req.user._id) {
+    if (idea.createdBy.toString() !== req.user.userId) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this idea" });
