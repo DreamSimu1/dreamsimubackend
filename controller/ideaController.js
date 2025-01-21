@@ -255,18 +255,19 @@ export const getIdeasByVision = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 export const updateIdea = async (req, res) => {
   const { id } = req.params;
   const { title, description, status, visionId } = req.body;
 
-  // Validate the input data
-  if (!title || !description || !status || !visionId) {
-    return res.status(400).json({ message: "All fields are required" });
+  // Validate at least one field is provided for update
+  if (!title && !description && !status && !visionId) {
+    return res
+      .status(400)
+      .json({ message: "At least one field is required to update" });
   }
 
   const validStatuses = ["InProgress", "Refinement", "Completed"];
-  if (!validStatuses.includes(status)) {
+  if (status && !validStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status value" });
   }
 
@@ -278,17 +279,17 @@ export const updateIdea = async (req, res) => {
     }
 
     // Ensure only the creator can edit the idea
-    if (idea.createdBy.toString() !== req.user._id) {
+    if (idea.createdBy.toString() !== req.user.userId) {
       return res
         .status(403)
         .json({ message: "Not authorized to edit this idea" });
     }
 
-    // Update the idea
-    idea.title = title;
-    idea.description = description;
-    idea.status = status;
-    idea.visionId = visionId;
+    // Update only provided fields
+    if (title) idea.title = title;
+    if (description) idea.description = description;
+    if (status) idea.status = status;
+    if (visionId) idea.visionId = visionId;
 
     // If a new image is uploaded, handle the image update
     if (req.file) {
