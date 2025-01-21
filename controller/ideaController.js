@@ -307,3 +307,29 @@ export const updateIdea = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const getIdeaById = async (req, res) => {
+  const { id } = req.params;
+
+  // Validate the ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid idea ID" });
+  }
+
+  try {
+    // Find the idea by ID
+    const idea = await Idea.findById(id).populate("createdBy", "name email"); // Populate `createdBy` for additional details (optional)
+
+    if (!idea) {
+      return res.status(404).json({ message: "Idea not found" });
+    }
+
+    res.status(200).json({
+      message: "Idea fetched successfully",
+      idea,
+    });
+  } catch (error) {
+    console.error("Error fetching idea:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

@@ -3,6 +3,7 @@ import express from "express";
 import {
   createIdea,
   deleteIdea,
+  getIdeaById,
   getIdeasByVision,
   updateIdea,
 } from "../controller/ideaController.js";
@@ -56,6 +57,8 @@ router.post(
   authenticateUser,
   createIdea
 );
+router.get("/get-single-idea/:id", authenticateUser, getIdeaById);
+
 router.get("/ideas/:visionId", authenticateUser, getIdeasByVision);
 router.put("/editidea/:id", authenticateUser, updateIdea);
 // Delete an idea
