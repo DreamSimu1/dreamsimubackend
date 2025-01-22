@@ -19,6 +19,7 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "inProgress", "completed"], // List all possible statuses
       default: "todo",
     },
+    archived: { type: Boolean, default: false },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assuming you have a "User" model for the authenticated user

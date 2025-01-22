@@ -246,6 +246,34 @@ export const updateTaskStatus = async (req, res) => {
   }
 };
 
+export const archiveTask = async (req, res) => {
+  const taskId = req.params.id; // Get the task ID from URL params
+  const { archived } = req.body; // Get the 'archived' status from the request body
+  console.log("Task ID:", taskId); // Ensure you're receiving the correct task ID
+  console.log("Request Body:", req.body); // Check if 'archived' status is coming through
+
+  try {
+    // Update the task by setting the archived field
+    const task = await Task.findByIdAndUpdate(
+      taskId,
+      { archived }, // Update the archived field
+      { new: true } // Return the updated task
+    );
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Successfully archived task
+    res.status(200).json({ message: "Task archived successfully", task });
+  } catch (error) {
+    console.error("Error archiving task:", error);
+    res
+      .status(500)
+      .json({ message: "Error archiving task", error: error.message });
+  }
+};
+
 // GET API to fetch all sprints by activity
 export const getSprintsByActivity = async (req, res) => {
   const { activities } = req.query;

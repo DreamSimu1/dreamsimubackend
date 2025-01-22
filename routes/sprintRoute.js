@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  archiveTask,
   createSprint,
   deleteSprint,
   editTask,
@@ -30,6 +31,7 @@ router.get("/sprints/refine/:refineId", authenticateUser, getSprintsByRefine);
 // Update a task
 router.put("/edit-task/:id", authenticateUser, editTask);
 router.put("/update-task-status/:taskId", updateTaskStatus);
+router.put("/archive-task/:id", authenticateUser, archiveTask);
 
 // Delete a sprint
 router.delete("/sprints/:id", authenticateUser, deleteSprint);
