@@ -130,8 +130,36 @@ export const getTask = async (req, res) => {
   }
 };
 
+// export const saveTask = async (req, res) => {
+//   const { title, day, activities } = req.body; // Destructure 'title' instead of 'task'
+
+//   // Log the received data to check if it's being sent correctly
+//   console.log("Received task data:", req.body); // Debugging line
+
+//   if (!title || !day || !activities) {
+//     return res
+//       .status(400)
+//       .json({ message: "Title, day, and activities are required" });
+//   }
+
+//   try {
+//     // Save the task for the activity (or update if it exists)
+//     const newTask = await Task.create({
+//       title: title, // Use 'title' here instead of 'task.title'
+//       day,
+//       activity: activities,
+//       createdBy: req.user.userId, // Assume authentication middleware sets userId
+//     });
+
+//     res.status(201).json({ message: "Task saved successfully", task: newTask });
+//   } catch (error) {
+//     console.error("Error saving task:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
 export const saveTask = async (req, res) => {
-  const { title, day, activities } = req.body; // Destructure 'title' instead of 'task'
+  const { title, day, activities, status } = req.body; // Destructure 'status' along with other fields
 
   // Log the received data to check if it's being sent correctly
   console.log("Received task data:", req.body); // Debugging line
@@ -143,12 +171,13 @@ export const saveTask = async (req, res) => {
   }
 
   try {
-    // Save the task for the activity (or update if it exists)
+    // If status is not provided, it will default to 'todo' (as per the schema)
     const newTask = await Task.create({
-      title: title, // Use 'title' here instead of 'task.title'
+      title,
       day,
       activity: activities,
-      createdBy: req.user.userId, // Assume authentication middleware sets userId
+      createdBy: req.user.userId, // Assuming authentication middleware sets userId
+      status: status || "todo", // Use the status provided or default to 'todo'
     });
 
     res.status(201).json({ message: "Task saved successfully", task: newTask });
@@ -157,6 +186,7 @@ export const saveTask = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 export const editTask = async (req, res) => {
   const { id } = req.params; // Get the task ID from the route parameters
   const { title, day, activities } = req.body; // Destructure the updated fields from the request body

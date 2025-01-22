@@ -14,6 +14,11 @@ const taskSchema = new mongoose.Schema(
       type: String, // You can adjust this type based on your needs (e.g., if activities are stored as references to another collection)
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["todo", "inProgress", "completed"], // List all possible statuses
+      default: "todo",
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assuming you have a "User" model for the authenticated user
