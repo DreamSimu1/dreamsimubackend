@@ -191,6 +191,31 @@ export const editTask = async (req, res) => {
   }
 };
 
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    // Find the task by ID
+    const task = await Task.findById(taskId);
+
+    // If task not found, return 404 error
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Update the task's status
+    task.status = status;
+    await task.save();
+
+    // Return success response
+    res.status(200).json({ message: "Task status updated successfully" });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    res.status(500).json({ message: "Error updating task" });
+  }
+};
+
 // GET API to fetch all sprints by activity
 export const getSprintsByActivity = async (req, res) => {
   const { activities } = req.query;

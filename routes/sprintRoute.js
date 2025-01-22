@@ -7,6 +7,7 @@ import {
   getSprintsByRefine,
   getTask,
   saveTask,
+  updateTaskStatus,
 } from "../controller/sprintController.js";
 import authenticateUser from "../middleware/authMiddleware.js";
 
@@ -28,6 +29,7 @@ router.get(
 router.get("/sprints/refine/:refineId", authenticateUser, getSprintsByRefine);
 // Update a task
 router.put("/edit-task/:id", authenticateUser, editTask);
+router.put("/update-task-status/:taskId", updateTaskStatus);
 
 // Delete a sprint
 router.delete("/sprints/:id", authenticateUser, deleteSprint);
