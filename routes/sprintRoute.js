@@ -2,6 +2,7 @@ import express from "express";
 import {
   createSprint,
   deleteSprint,
+  editTask,
   getSprintByRefineTitlt,
   getSprintsByRefine,
   getTask,
@@ -25,6 +26,9 @@ router.get(
 );
 
 router.get("/sprints/refine/:refineId", authenticateUser, getSprintsByRefine);
+// Update a task
+router.put("/edit-task/:id", authenticateUser, editTask);
+
 // Delete a sprint
 router.delete("/sprints/:id", authenticateUser, deleteSprint);
 

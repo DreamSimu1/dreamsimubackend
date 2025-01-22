@@ -157,6 +157,39 @@ export const saveTask = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const editTask = async (req, res) => {
+  const { id } = req.params; // Get the task ID from the route parameters
+  const { title, day, activities } = req.body; // Destructure the updated fields from the request body
+
+  // Validate that at least one field is provided (title or day)
+  if (!title && !day) {
+    return res.status(400).json({ message: "Either title or day is required" });
+  }
+
+  try {
+    // Find the task by ID and update it, only updating provided fields
+    const updatedTask = await Task.findByIdAndUpdate(
+      id, // Task ID
+      {
+        ...(title && { title }), // Only update title if provided
+        ...(day && { day }), // Only update day if provided
+        // We are leaving activities and archived alone for now
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Task updated successfully", task: updatedTask });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // GET API to fetch all sprints by activity
 export const getSprintsByActivity = async (req, res) => {
