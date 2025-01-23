@@ -4,6 +4,7 @@ import {
   createSprint,
   deleteSprint,
   editTask,
+  getAllSprints,
   getSprintByRefineTitlt,
   getSprintsByRefine,
   getTask,
@@ -28,6 +29,9 @@ router.get(
 );
 
 router.get("/sprints/refine/:refineId", authenticateUser, getSprintsByRefine);
+// router.js or your routing file
+router.get("/getall-sprints", authenticateUser, getAllSprints);
+
 // Update a task
 router.put("/edit-task/:id", authenticateUser, editTask);
 router.put("/update-task-status/:taskId", updateTaskStatus);

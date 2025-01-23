@@ -384,3 +384,23 @@ export const getSprintsByRefine = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+// Controller function
+export const getAllSprints = async (req, res) => {
+  try {
+    // Fetch all tasks (sprints) from the database
+    const allSprints = await Task.find(); // Adjust 'Sprint' to match your model name
+
+    // If no sprints found
+    if (!allSprints || allSprints.length === 0) {
+      return res.status(404).json({ message: "No sprints found" });
+    }
+
+    // Return all the sprints
+    res
+      .status(200)
+      .json({ message: "Sprints fetched successfully", sprints: allSprints });
+  } catch (error) {
+    console.error("Error fetching sprints:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
