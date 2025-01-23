@@ -384,7 +384,6 @@ export const getSprintsByRefine = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-// Controller function
 export const getAllSprints = async (req, res) => {
   try {
     // Fetch all tasks (sprints) from the database
@@ -395,10 +394,10 @@ export const getAllSprints = async (req, res) => {
       return res.status(404).json({ message: "No sprints found" });
     }
 
-    // Return all the sprints
+    // Return all the sprints with the key 'tasks'
     res
       .status(200)
-      .json({ message: "Sprints fetched successfully", sprints: allSprints });
+      .json({ message: "Sprints fetched successfully", tasks: allSprints }); // Change 'sprints' to 'tasks'
   } catch (error) {
     console.error("Error fetching sprints:", error);
     res.status(500).json({ message: "Server error", error: error.message });
