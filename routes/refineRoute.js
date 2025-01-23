@@ -8,6 +8,7 @@ import {
   deleteRefine,
   editRefine,
   getAllRefines,
+  getAllRefinesByUser,
   getRefineById,
   getRefinesByIdea,
   getRefinesByIdeaId,
@@ -38,6 +39,9 @@ router.get("/refines-by-idea", authenticateUser, getRefinesByIdea);
 router.get("/refines-by-idea-id", authenticateUser, getRefinesByIdeaId);
 
 router.get("/refines", authenticateUser, getAllRefines);
+// In your routes file
+router.get("/refines-by-user", authenticateUser, getAllRefinesByUser);
+
 // Edit Refine
 router.put("/refine/:refineId", authenticateUser, editRefine); // Use PUT for update
 

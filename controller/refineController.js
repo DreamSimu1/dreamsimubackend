@@ -98,6 +98,27 @@ export const createRefine = async (req, res) => {
   }
 };
 
+// Controller for getting all refinements by a specific user
+export const getAllRefinesByUser = async (req, res) => {
+  try {
+    // Find all refinements created by the authenticated user
+    const refines = await Refine.find({ createdBy: req.user.userId })
+      .populate("ideaId") // Optionally populate related idea details if needed
+      .populate("visionId"); // Populate related vision data if needed
+
+    if (refines.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No refinements found for this user" });
+    }
+
+    res.status(200).json(refines);
+  } catch (error) {
+    console.error("Error fetching refinements:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // export const deleteRefine = async (req, res) => {
 //   const { id } = req.params;
 

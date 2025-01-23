@@ -3,6 +3,7 @@ import express from "express";
 import {
   createIdea,
   deleteIdea,
+  getAllIdeas,
   getIdeaById,
   getIdeasByVision,
   updateIdea,
@@ -60,6 +61,9 @@ router.post(
 router.get("/get-single-idea/:id", authenticateUser, getIdeaById);
 
 router.get("/ideas/:visionId", authenticateUser, getIdeasByVision);
+// Define the route to get all ideas for the authenticated user
+router.get("/all-ideas", authenticateUser, getAllIdeas);
+
 router.put("/editidea/:id", authenticateUser, updateIdea);
 // Delete an idea
 router.delete("/idea/:id", authenticateUser, deleteIdea);

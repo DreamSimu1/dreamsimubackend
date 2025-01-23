@@ -204,6 +204,29 @@ export const createIdea = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+// Controller to fetch all ideas created by the authenticated user
+export const getAllIdeas = async (req, res) => {
+  try {
+    // Fetch all ideas where the createdBy field matches the logged-in user's ID
+    const ideas = await Idea.find({ createdBy: req.user.userId });
+
+    // Check if no ideas were found
+    if (!ideas || ideas.length === 0) {
+      return res.status(404).json({ message: "No ideas found for this user" });
+    }
+
+    // Return the list of ideas
+    res.status(200).json({
+      message: "Ideas fetched successfully",
+      ideas,
+    });
+  } catch (error) {
+    console.error("Error fetching ideas:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching ideas", error: error.message });
+  }
+};
 
 // Delete an idea
 export const deleteIdea = async (req, res) => {
