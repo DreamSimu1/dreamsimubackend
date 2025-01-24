@@ -36,6 +36,8 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "https://dreamsimu.vercel.app",
+    "https://www.dreamsimu.com",
+    "https://dreamsimu.com",
     "https://dreamsimuweb.vercel.app",
   ], // specify your client's URL
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
