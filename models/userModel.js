@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       required: [true, "Email is required"],
     },
-    phone: { type: String, unique: true, sparse: true },
+    phone: { type: String },
 
     address: {
       type: String,
@@ -43,6 +43,15 @@ const userSchema = new mongoose.Schema(
     updatedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
+);
+
+userSchema.index(
+  { phone: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: { phone: { $ne: "" } },
+  }
 );
 
 export default mongoose.model("User", userSchema);
