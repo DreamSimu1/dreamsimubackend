@@ -66,13 +66,13 @@ export const signUp = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
+    // Safely handle optional fields
     const newUser = new User({
       fullname,
       email,
       password: hashedPassword,
-      phone, // Optional
-      address, // Optional
+      phone: phone && phone.trim() !== "" ? phone.trim() : null,
+      address: address || null, // Optional
     });
 
     const user = await newUser.save();
