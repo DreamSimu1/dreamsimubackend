@@ -42,7 +42,7 @@ import jwt from "jsonwebtoken";
 // authController.js
 
 export const signUp = async (req, res, next) => {
-  const { fullname, email, password, phone = "", address = "" } = req.body;
+  const { fullname, email, password } = req.body;
 
   // Validate mandatory fields
   if (!fullname || !email || !password) {
@@ -60,16 +60,6 @@ export const signUp = async (req, res, next) => {
       return next(error);
     }
 
-    // Check if phone is already used (if provided)
-    if (phone && phone.trim() !== "") {
-      const phoneExist = await User.findOne({ phone });
-      if (phoneExist) {
-        const error = new Error("Phone number already registered");
-        error.status = 400;
-        return next(error);
-      }
-    }
-
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -78,8 +68,6 @@ export const signUp = async (req, res, next) => {
       fullname,
       email,
       password: hashedPassword,
-      phone: phone || "",
-      address: address || "", // Optional
     });
 
     const user = await newUser.save();
