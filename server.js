@@ -19,7 +19,7 @@ import dotenv from "dotenv";
 import path from "path";
 import connectDB from "./config/db2.js";
 import cors from "cors";
-
+import MongoStore from "connect-mongo";
 import authenticateUser from "./middleware/authMiddleware.js";
 import blogRoute from "./routes/blogRoute.js";
 import authRoute from "./routes/authRoute.js";
@@ -54,6 +54,11 @@ app.use(
     secret: process.env.GOOGLE_CLIENT_SECRET,
     resave: false,
     saveUninitialized: true,
+
+    store: new MongoStore({
+      mongoUrl: process.env.MONGODB_URI, // Use `mongoUrl` instead of `url`
+      ttl: 14 * 24 * 60 * 60, // 14 days
+    }),
   })
 );
 app.use(passport.initialize());
