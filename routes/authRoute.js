@@ -40,6 +40,42 @@ router.get(
 //     res.redirect(`/vision?accessToken=${token}&refreshToken=${refreshToken}`);
 //   }
 // );
+// router.get(
+//   "/google/callback",
+//   passport.authenticate("google", { failureRedirect: "/login" }),
+//   async (req, res) => {
+//     const googleEmail = req.user.email;
+
+//     try {
+//       let user = await User.findOne({ email: googleEmail });
+
+//       if (!user) {
+//         user = new User({
+//           email: googleEmail,
+//           name: req.user.name,
+//           googleId: req.user.id,
+//         });
+//         await user.save();
+//       }
+
+//       const token = generateJWT(user);
+//       const refreshToken = generateRefreshToken(user);
+
+//       // Store the tokens in localStorage (in your frontend code)
+//       // res.redirect(
+//       //   `http://localhost:3001/vision?accessToken=${token}&refreshToken=${refreshToken}`
+//       // );
+//       res.redirect(
+//         `http://localhost:3001/vision?accessToken=${encodeURIComponent(
+//           token
+//         )}&refreshToken=${encodeURIComponent(refreshToken)}`
+//       );
+//     } catch (error) {
+//       console.error("Error during Google login:", error);
+//       res.redirect("/login");
+//     }
+//   }
+// );
 router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
@@ -61,9 +97,11 @@ router.get(
       const token = generateJWT(user);
       const refreshToken = generateRefreshToken(user);
 
-      // Store the tokens in localStorage (in your frontend code)
+      // Redirecting user to frontend with tokens in query params
       res.redirect(
-        `http://localhost:3001/vision?accessToken=${token}&refreshToken=${refreshToken}`
+        `https://dreamsimu.com/vision?accessToken=${encodeURIComponent(
+          token
+        )}&refreshToken=${encodeURIComponent(refreshToken)}`
       );
     } catch (error) {
       console.error("Error during Google login:", error);
