@@ -1,6 +1,7 @@
 import express from "express";
 import {
   archiveTask,
+  createCalendarEvent,
   createSprint,
   deleteSprint,
   editTask,
@@ -19,6 +20,7 @@ const router = express.Router();
 router.post("/sprints", authenticateUser, createSprint);
 
 router.post("/save-task", authenticateUser, saveTask);
+router.post("/event", authenticateUser, createCalendarEvent);
 
 router.get("/tasks", authenticateUser, getTask);
 

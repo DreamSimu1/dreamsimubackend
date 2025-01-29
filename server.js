@@ -9,7 +9,9 @@ import schoolRoute from "./routes/schoolRoute.js";
 import offlineRoute from "./routes/offlineRoute.js";
 import OffRoutes from "./routes/OffRoutes.js";
 import receiptRoute from "./routes/receiptRoute.js";
-
+import passport from "passport";
+import "./passport.js";
+import session from "express-session";
 import noticeRoute from "./routes/noticeRoute.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -46,6 +48,17 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.use(
+  session({
+    secret: process.env.GOOGLE_CLIENT_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
 // app.use((req, res, next) => {
 //   res.header("Access-Control-Allow-Origin", "https://blog.zarichtravels.com");
 //   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");

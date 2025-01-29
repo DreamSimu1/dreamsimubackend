@@ -7,7 +7,21 @@ import Refine from "../models/refineModel.js"; // Assuming the Refine model exis
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import multerS3 from "multer-s3";
+import calendar from "../utils/googleCalendarService.js"; // Import calendar service
+import { google } from "googleapis";
+import User from "../models/userModel.js";
 
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_CALENDAR_REDIRECT_URI
+);
+
+/**
+ * Create a Google Calendar event
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 dotenv.config();
 
 // Cloudinary configuration
@@ -131,7 +145,7 @@ export const getTask = async (req, res) => {
 };
 
 // export const saveTask = async (req, res) => {
-//   const { title, day, activities } = req.body; // Destructure 'title' instead of 'task'
+//   const { title, day, activities, status } = req.body; // Destructure 'status' along with other fields
 
 //   // Log the received data to check if it's being sent correctly
 //   console.log("Received task data:", req.body); // Debugging line
@@ -143,12 +157,13 @@ export const getTask = async (req, res) => {
 //   }
 
 //   try {
-//     // Save the task for the activity (or update if it exists)
+//     // If status is not provided, it will default to 'todo' (as per the schema)
 //     const newTask = await Task.create({
-//       title: title, // Use 'title' here instead of 'task.title'
+//       title,
 //       day,
 //       activity: activities,
-//       createdBy: req.user.userId, // Assume authentication middleware sets userId
+//       createdBy: req.user.userId, // Assuming authentication middleware sets userId
+//       status: status || "todo", // Use the status provided or default to 'todo'
 //     });
 
 //     res.status(201).json({ message: "Task saved successfully", task: newTask });
@@ -157,12 +172,10 @@ export const getTask = async (req, res) => {
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
 // };
-
 export const saveTask = async (req, res) => {
-  const { title, day, activities, status } = req.body; // Destructure 'status' along with other fields
+  const { title, day, activities, status } = req.body;
 
-  // Log the received data to check if it's being sent correctly
-  console.log("Received task data:", req.body); // Debugging line
+  console.log("Received task data:", req.body);
 
   if (!title || !day || !activities) {
     return res
@@ -171,22 +184,293 @@ export const saveTask = async (req, res) => {
   }
 
   try {
-    // If status is not provided, it will default to 'todo' (as per the schema)
+    // Save the task in the database
     const newTask = await Task.create({
       title,
       day,
       activity: activities,
-      createdBy: req.user.userId, // Assuming authentication middleware sets userId
-      status: status || "todo", // Use the status provided or default to 'todo'
+      createdBy: req.user.userId,
+      status: status || "todo",
     });
 
-    res.status(201).json({ message: "Task saved successfully", task: newTask });
+    // Create a Google Calendar event
+    const event = {
+      summary: title,
+      description: `Task: ${title}`,
+      start: {
+        dateTime: new Date(day).toISOString(),
+        timeZone: "UTC",
+      },
+      end: {
+        dateTime: new Date(
+          new Date(day).getTime() + 60 * 60 * 1000 // 1-hour duration
+        ).toISOString(),
+        timeZone: "UTC",
+      },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: "popup", minutes: 120 }, // 2 hours before
+        ],
+      },
+    };
+
+    await calendar.events.insert({
+      calendarId: "primary", // User's primary calendar
+      resource: event,
+    });
+
+    res.status(201).json({
+      message: "Task saved successfully and reminder set",
+      task: newTask,
+    });
   } catch (error) {
     console.error("Error saving task:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
+// export const createCalendarEvent = async (req, res) => {
+//   const { userId } = req.user; // Use userId from JWT to identify the user
+//   const { title, description, startTime, endTime } = req.body;
+
+//   if (!title || !startTime || !endTime) {
+//     return res.status(400).json({ message: "Missing required fields" });
+//   }
+
+//   try {
+//     // Retrieve the user's Google tokens from the database
+//     const user = await User.findById(userId);
+
+//     if (!user || !user.accessToken || !user.refreshToken) {
+//       return res
+//         .status(400)
+//         .json({ message: "Google tokens are not set for this user" });
+//     }
+
+//     const { accessToken, refreshToken } = user; // Get tokens from the user
+
+//     // Set OAuth2 client credentials
+//     oauth2Client.setCredentials({
+//       access_token: accessToken,
+//       refresh_token: refreshToken,
+//     });
+
+//     // Manually check if the access token is expired
+//     const currentTime = Date.now();
+//     if (oauth2Client.credentials.expiry_date <= currentTime) {
+//       try {
+//         const { credentials } = await oauth2Client.refreshAccessToken();
+//         oauth2Client.setCredentials(credentials);
+//         console.log("Access token refreshed");
+//       } catch (error) {
+//         console.error("Failed to refresh access token:", error);
+//         return res.status(500).json({
+//           message: "Failed to refresh access token",
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+//     const event = {
+//       summary: title,
+//       description: description || "No description provided",
+//       start: {
+//         dateTime: new Date(startTime).toISOString(),
+//         timeZone: "UTC",
+//       },
+//       end: {
+//         dateTime: new Date(endTime).toISOString(),
+//         timeZone: "UTC",
+//       },
+//       reminders: {
+//         useDefault: false,
+//         overrides: [
+//           { method: "popup", minutes: 120 }, // Notify 2 hours before
+//           { method: "popup", minutes: 0 }, // Notify at the time of the event
+//         ],
+//       },
+//     };
+
+//     // Insert the event into Google Calendar
+//     const response = await calendar.events.insert({
+//       calendarId: "primary", // Use user's primary calendar
+//       resource: event,
+//     });
+
+//     res.status(201).json({
+//       message: "Google Calendar event created successfully",
+//       event: response.data,
+//     });
+//   } catch (error) {
+//     console.error("Error creating Google Calendar event:", error);
+
+//     // Handle token refresh if needed
+//     if (error.code === 401) {
+//       // Unauthorized error, likely due to expired access token
+//       try {
+//         const { credentials } = await oauth2Client.refreshAccessToken();
+//         oauth2Client.setCredentials(credentials);
+
+//         // Retry event creation after refreshing token
+//         const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+//         const event = {
+//           summary: title,
+//           description: description || "No description provided",
+//           start: {
+//             dateTime: new Date(startTime).toISOString(),
+//             timeZone: "UTC",
+//           },
+//           end: {
+//             dateTime: new Date(endTime).toISOString(),
+//             timeZone: "UTC",
+//           },
+//           reminders: {
+//             useDefault: false,
+//             overrides: [
+//               { method: "popup", minutes: 120 }, // Notify 2 hours before
+//               { method: "popup", minutes: 0 }, // Notify at the time of the event
+//             ],
+//           },
+//         };
+
+//         const response = await calendar.events.insert({
+//           calendarId: "primary", // Use user's primary calendar
+//           resource: event,
+//         });
+
+//         res.status(201).json({
+//           message:
+//             "Google Calendar event created successfully after token refresh",
+//           event: response.data,
+//         });
+//       } catch (refreshError) {
+//         console.error("Failed to refresh access token:", refreshError);
+//         res.status(500).json({
+//           message: "Failed to refresh access token",
+//           error: refreshError.message,
+//         });
+//       }
+//     } else {
+//       res.status(500).json({
+//         message: "Failed to create Google Calendar event",
+//         error: error.message,
+//       });
+//     }
+//   }
+// };
+
+export const createCalendarEvent = async (req, res) => {
+  const { userId } = req.user; // Use userId from JWT to identify the user
+  const { title, description, startTime, endTime } = req.body;
+
+  if (!title || !startTime || !endTime) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    // Retrieve the user's Google tokens from the database
+    const user = await User.findById(userId);
+
+    if (!user || !user.accessToken || !user.refreshToken) {
+      console.error("Google tokens are not set for this user");
+      return res
+        .status(400)
+        .json({ message: "Google tokens are not set for this user" });
+    }
+
+    const { accessToken, refreshToken } = user; // Get tokens from the user
+
+    // Log the tokens to ensure they're correct
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
+
+    // Set OAuth2 client credentials
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_CALENDAR_REDIRECT_URI
+    );
+
+    oauth2Client.setCredentials({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    // Check if the access token is expired manually by comparing with expiry_date
+    const tokenExpiryDate = oauth2Client.credentials.expiry_date;
+    const currentTime = Date.now();
+
+    // If the token is expired or about to expire, refresh it
+    if (tokenExpiryDate && tokenExpiryDate <= currentTime) {
+      try {
+        console.log("Access token expired, attempting to refresh...");
+
+        // Refresh the token
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        oauth2Client.setCredentials(credentials);
+        console.log("Access token refreshed");
+      } catch (error) {
+        // Log the detailed error response from Google
+        console.error(
+          "Failed to refresh access token:",
+          error.response ? error.response.data : error.message
+        );
+        return res.status(500).json({
+          message: "Failed to refresh access token",
+          error: error.response ? error.response.data : error.message,
+        });
+      }
+    }
+
+    // Create the Google Calendar event
+    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+    const event = {
+      summary: title,
+      description: description || "No description provided",
+      start: {
+        dateTime: new Date(startTime).toISOString(),
+        timeZone: "UTC",
+      },
+      end: {
+        dateTime: new Date(endTime).toISOString(),
+        timeZone: "UTC",
+      },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: "popup", minutes: 120 }, // Notify 2 hours before
+          { method: "popup", minutes: 0 }, // Notify at the time of the event
+        ],
+      },
+    };
+
+    // Insert the event into Google Calendar
+    const response = await calendar.events.insert({
+      calendarId: "primary", // Use user's primary calendar
+      resource: event,
+    });
+
+    res.status(201).json({
+      message: "Google Calendar event created successfully",
+      event: response.data,
+    });
+  } catch (error) {
+    // Log the full error response for debugging
+    console.error(
+      "Error creating Google Calendar event:",
+      error.response ? error.response.data : error.message
+    );
+    res.status(500).json({
+      message: "Failed to create Google Calendar event",
+      error: error.response ? error.response.data : error.message,
+    });
+  }
+};
 export const editTask = async (req, res) => {
   const { id } = req.params; // Get the task ID from the route parameters
   const { title, day, activities } = req.body; // Destructure the updated fields from the request body

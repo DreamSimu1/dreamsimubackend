@@ -22,7 +22,9 @@ const userSchema = new mongoose.Schema(
       data: String,
       default: "",
     },
-
+    googleId: { type: String },
+    accessToken: String,
+    refreshToken: String,
     resetToken: String,
     expireToken: Date,
     passwordChangedAt: Date,
