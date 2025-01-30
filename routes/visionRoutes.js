@@ -39,7 +39,10 @@ const s3 = new S3Client({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
-  // requestTimeout: 30000,
+  requestHandler: new NodeHttpHandler({
+    requestTimeout: 120000, // 2 minutes timeout
+    connectionTimeout: 120000, // 2 minutes connection timeout
+  }),
 });
 
 // Set up multer with multer-s3 for direct S3 upload
