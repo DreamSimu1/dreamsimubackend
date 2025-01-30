@@ -138,7 +138,7 @@ router.get(
       console.log("Generated refreshToken:", refreshToken);
 
       // Redirecting user to frontend with tokens in query params
-      const redirectUrl = `http://localhost:5173/explore?accessToken=${encodeURIComponent(
+      const redirectUrl = `http://localhost:3001/vision?accessToken=${encodeURIComponent(
         token
       )}&refreshToken=${encodeURIComponent(refreshToken)}`;
       console.log("Redirecting to:", redirectUrl); // Log the redirect URL

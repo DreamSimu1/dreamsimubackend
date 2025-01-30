@@ -34,9 +34,12 @@ const authenticateUser = (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    console.log("Decoded Token:", decoded);
     // Attach user to request object
-    req.user = { userId: decoded.id }; // This assumes the payload contains `id` as the user ID
+    // req.user = { userId: decoded.id }; // This assumes the payload contains `id` as the user ID
+
+    req.user = { userId: decoded.userId };
+
     next();
   } catch (error) {
     console.error("Error authenticating token:", error);

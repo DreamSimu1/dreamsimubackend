@@ -16,6 +16,7 @@ const s3 = new S3Client({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
+  // requestTimeout: 30000,
 });
 
 // Set up multer with multer-s3 for direct S3 upload
@@ -99,6 +100,7 @@ const upload = multer({
 export const createVision = async (req, res) => {
   const { title, affirmation, statement, visibility } = req.body;
   const { userId } = req.user; // Assuming you're using JWT authentication to get the user ID
+  console.log("req.user:", req.user);
 
   try {
     let imageUrl = "";
