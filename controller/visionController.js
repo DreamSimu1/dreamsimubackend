@@ -5,6 +5,7 @@ import multerS3 from "multer-s3";
 import dotenv from "dotenv";
 import multer from "multer";
 import mongoose from "mongoose";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 // dotenv.config();
 
 dotenv.config();

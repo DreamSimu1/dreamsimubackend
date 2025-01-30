@@ -9,6 +9,7 @@ import {
 } from "../controller/visionController.js";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import dotenv from "dotenv";
 import authenticateUser from "../middleware/authMiddleware.js";
 import fileUpload from "express-fileupload"; // To handle file uploads

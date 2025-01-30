@@ -11,6 +11,7 @@ import {
 import authenticateUser from "../middleware/authMiddleware.js";
 import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import multerS3 from "multer-s3";
 import dotenv from "dotenv";
 const router = express.Router();
