@@ -76,6 +76,39 @@ router.get(
 //     }
 //   }
 // );
+// router.get(
+//   "/google/callback",
+//   passport.authenticate("google", { failureRedirect: "/login" }),
+//   async (req, res) => {
+//     const googleEmail = req.user.email;
+
+//     try {
+//       let user = await User.findOne({ email: googleEmail });
+
+//       if (!user) {
+//         user = new User({
+//           email: googleEmail,
+//           name: req.user.name,
+//           googleId: req.user.id,
+//         });
+//         await user.save();
+//       }
+
+//       const token = generateJWT(user);
+//       const refreshToken = generateRefreshToken(user);
+
+//       // Redirecting user to frontend with tokens in query params
+//       res.redirect(
+//         `http://localhost:3001/vision?accessToken=${encodeURIComponent(
+//           token
+//         )}&refreshToken=${encodeURIComponent(refreshToken)}`
+//       );
+//     } catch (error) {
+//       console.error("Error during Google login:", error);
+//       res.redirect("/login");
+//     }
+//   }
+// );
 router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
@@ -83,6 +116,8 @@ router.get(
     const googleEmail = req.user.email;
 
     try {
+      console.log("Google authentication successful for email:", googleEmail);
+
       let user = await User.findOne({ email: googleEmail });
 
       if (!user) {
@@ -92,17 +127,22 @@ router.get(
           googleId: req.user.id,
         });
         await user.save();
+        console.log("New user created:", user);
       }
 
       const token = generateJWT(user);
       const refreshToken = generateRefreshToken(user);
 
+      // Log the tokens to ensure they are being generated properly
+      console.log("Generated token:", token);
+      console.log("Generated refreshToken:", refreshToken);
+
       // Redirecting user to frontend with tokens in query params
-      res.redirect(
-        `https://dreamsimu.com/vision?accessToken=${encodeURIComponent(
-          token
-        )}&refreshToken=${encodeURIComponent(refreshToken)}`
-      );
+      const redirectUrl = `http://localhost:3001/vision?accessToken=${encodeURIComponent(
+        token
+      )}&refreshToken=${encodeURIComponent(refreshToken)}`;
+      console.log("Redirecting to:", redirectUrl); // Log the redirect URL
+      res.redirect(redirectUrl);
     } catch (error) {
       console.error("Error during Google login:", error);
       res.redirect("/login");
