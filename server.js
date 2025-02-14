@@ -1,5 +1,6 @@
 import express from "express";
 import visionRoutes from "./routes/visionRoutes.js";
+import aiRoute from "./routes/aiRoute.js";
 import refineRoute from "./routes/refineRoute.js";
 import sprintRoute from "./routes/sprintRoute.js";
 import pointRoute from "./routes/pointRoute.js";
@@ -36,7 +37,7 @@ const __dirname = dirname(__filename);
 // Configure CORS
 const corsOptions = {
   origin: [
-    "http://localhost:3001",
+    "http://localhost:3000",
     "http://localhost:5173",
     "https://dreamsimu.vercel.app",
     "https://www.dreamsimu.com",
@@ -73,6 +74,7 @@ app.use(passport.session());
 // });
 app.use("/api", authRoute);
 app.use("/api", visionRoutes);
+app.use("/api", aiRoute);
 app.use("/api", ideaRoute);
 app.use("/api", refineRoute);
 app.use("/api", sprintRoute);
