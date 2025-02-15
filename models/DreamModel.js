@@ -34,6 +34,7 @@ const DreamSchema = new mongoose.Schema({
   },
   imageUrls: { type: [String], required: true }, // Store multiple image URLs
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  isSaved: { type: Boolean, default: false },
 });
 
 const Dream = mongoose.model("Dream", DreamSchema);

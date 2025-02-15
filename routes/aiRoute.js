@@ -1,6 +1,11 @@
 import express from "express";
 import authenticateUser from "../middleware/authMiddleware.js";
-import { generateDream } from "../controller/aiController.js";
+import {
+  generateDream,
+  getTemplateVisionById,
+  getTemplateVisions,
+  saveTemplateVision,
+} from "../controller/aiController.js";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import { S3Client } from "@aws-sdk/client-s3";
@@ -38,6 +43,21 @@ router.post(
   upload.single("image"),
   authenticateUser,
   generateDream
+);
+router.post("/create-template-vision", authenticateUser, saveTemplateVision);
+
+// Route to get all template visions for a specific user
+router.get(
+  "/get-template-visions/:userId",
+  authenticateUser,
+  getTemplateVisions
+);
+
+// Route to get a specific vision by ID
+router.get(
+  "/get-template-vision/:visionId",
+  authenticateUser,
+  getTemplateVisionById
 );
 
 export default router;
