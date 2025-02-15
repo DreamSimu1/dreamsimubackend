@@ -101,7 +101,7 @@ export const createSprint = async (req, res) => {
       activity,
       refineId,
       tasks: tasks, // Store the tasks for the specific day
-      createdBy: req.user.userId, // Ensure `req.user.userId` is populated by the auth middleware
+      createdBy: req.user.userId,
     });
 
     res.status(201).json({
@@ -125,7 +125,8 @@ export const getTask = async (req, res) => {
   try {
     // Find tasks by user and activity
     const tasks = await Task.find({
-      createdBy: req.user.userId, // Get tasks created by the authenticated user
+      createdBy: req.user.userId,
+
       activity: activity, // Filter by activity
     }).sort({ day: 1 }); // Optionally, sort by day
 
@@ -190,6 +191,7 @@ export const saveTask = async (req, res) => {
       day,
       activity: activities,
       createdBy: req.user.userId,
+
       status: status || "todo",
     });
 

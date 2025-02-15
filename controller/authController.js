@@ -32,12 +32,12 @@ export const signUp = async (req, res, next) => {
 
       // Generate JWT tokens
       const token = jwt.sign(
-        { id: user._id, isAdmin: user.isAdmin },
+        { _id: user._id, isAdmin: user.isAdmin },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
       const refreshToken = jwt.sign(
-        { id: user._id, isAdmin: user.isAdmin },
+        { _id: user._id, isAdmin: user.isAdmin },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
@@ -152,11 +152,14 @@ export const login = async (req, res, next) => {
       }
     }
 
-    const token = jwt.sign(
-      { userId: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    // const token = jwt.sign(
+    //   { userId: user._id, isAdmin: user.isAdmin },
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "1h" }
+    // );
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     res.status(200).json({
       accessToken: user.accessToken,
@@ -180,9 +183,7 @@ export const getProfile = async (req, res) => {
     }
 
     // const user = await User.findById(req.user.userId).select("-password");
-    const user = await User.findById(req.user.userId || req.user._id).select(
-      "-password"
-    );
+    const user = await User.findById(req.user._id).select("-password");
 
     res.json({ user });
   } catch (error) {

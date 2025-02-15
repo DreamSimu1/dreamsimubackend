@@ -175,7 +175,8 @@ export const createVision = async (req, res) => {
 export const getAllVisions = async (req, res) => {
   try {
     // Get the userId from the authentication middleware (JWT token)
-    const userId = req.user.userId;
+    // const userId = req.user.userId;
+    const userId = req.user._id;
     console.log("Fetching visions for userId:", userId);
 
     // Fetch visions created by this user

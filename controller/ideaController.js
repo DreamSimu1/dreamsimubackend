@@ -192,7 +192,7 @@ export const createIdea = async (req, res) => {
       status,
       visionId,
       imageUrl, // Include image URL
-      createdBy: req.user.userId, // Ensure `req.user.id` is populated by the auth middleware
+      createdBy: req.user.userId,
     });
 
     res.status(201).json({

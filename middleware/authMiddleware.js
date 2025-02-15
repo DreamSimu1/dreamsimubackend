@@ -60,12 +60,18 @@ const authenticateUser = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Decoded Token:", decoded);
 
-    if (!decoded.userId) {
-      console.log("userId missing in token payload:", decoded);
+    // if (!decoded.userId) {
+    //   console.log("userId missing in token payload:", decoded);
+    //   return res.status(401).json({ message: "Invalid token structure" });
+    // }
+
+    // req.user = { userId: decoded.userId }; // Ensure `userId` is set correctly
+    if (!decoded._id) {
+      console.log("_id missing in token payload:", decoded);
       return res.status(401).json({ message: "Invalid token structure" });
     }
 
-    req.user = { userId: decoded.userId }; // Ensure `userId` is set correctly
+    req.user = { _id: decoded._id }; // ✅ Use `_id` now
 
     next();
   } catch (error) {

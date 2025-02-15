@@ -94,7 +94,7 @@ export const protect = async (req, res, next) => {
     console.log("Decoded Token:", decoded);
 
     // Fetch user from database using `_id`
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded._id).select("-password");
 
     if (!user) {
       console.log("User not found in the database.");

@@ -138,7 +138,7 @@ router.get(
       console.log("Generated refreshToken:", refreshToken);
 
       // Redirecting user to frontend with tokens in query params
-      const redirectUrl = `https://dreamsimu.com/vision?accessToken=${encodeURIComponent(
+      const redirectUrl = `http://localhost:3000/vision?accessToken=${encodeURIComponent(
         token
       )}&refreshToken=${encodeURIComponent(refreshToken)}`;
       console.log("Redirecting to:", redirectUrl); // Log the redirect URL

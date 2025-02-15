@@ -103,6 +103,7 @@ export const getAllRefinesByUser = async (req, res) => {
   try {
     // Find all refinements created by the authenticated user
     const refines = await Refine.find({ createdBy: req.user.userId })
+
       .populate("ideaId") // Optionally populate related idea details if needed
       .populate("visionId"); // Populate related vision data if needed
 

@@ -6,7 +6,7 @@ dotenv.config(); // To load environment variables
 // Function to generate JWT token
 export const generateJWT = (user) => {
   const payload = {
-    userId: user._id,
+    _id: user._id,
     email: user.email,
     name: user.name,
   };
@@ -22,7 +22,7 @@ export const generateJWT = (user) => {
 // Optional: You can create a refresh token function too
 export const generateRefreshToken = (user) => {
   const payload = {
-    userId: user._id,
+    _id: user._id,
   };
 
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
