@@ -118,8 +118,8 @@ export const generateMultipleImages = async (
 ) => {
   // Create a custom prompt depending on whether a user image is provided
   const prompt = userImage
-    ? `Generate an artistic dream image for "${title}", incorporating the face from this image: ${userImage}.`
-    : `Generate an artistic dream image for "${title}".`;
+    ? `Generate a highly realistic, photorealistic image of "${title}", incorporating the face from this image: ${userImage}.`
+    : `Generate a highly realistic, photorealistic image of"${title}".`;
 
   return await callOpenAIForImages(prompt, size); // Call the DALL·E or OpenAI service with the modified prompt
 };
@@ -128,7 +128,7 @@ export const generateMultipleImages = async (
 export async function callOpenAIForImages(
   prompt,
   size = "1024x1024",
-  numberOfImages = 5
+  numberOfImages = 10
 ) {
   const imageUrls = [];
 

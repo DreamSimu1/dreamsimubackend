@@ -171,6 +171,14 @@ export const login = async (req, res, next) => {
 
 export const getProfile = async (req, res) => {
   try {
+    console.log("Request User:", req.user); // Debugging
+
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: "User not found or token invalid" });
+    }
+
     const user = await User.findById(req.user._id).select("-password");
     res.json({ user });
   } catch (error) {
