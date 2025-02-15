@@ -240,7 +240,7 @@
 
 import { generateMultipleImages } from "../services/openaiService.js";
 import Dream from "../models/DreamModel.js";
-
+import mongoose from "mongoose";
 // export const generateDream = async (req, res) => {
 //   const { title, userId } = req.body;
 //   const { userImageUrl } = req.file ? req.file : {}; // Get uploaded user image URL
@@ -277,12 +277,54 @@ import Dream from "../models/DreamModel.js";
 //     res.status(500).json({ error: "Failed to generate dream images" });
 //   }
 // };
+// export const generateDream = async (req, res) => {
+//   const { title, userId } = req.body;
+
+//   // Get the uploaded image URL from S3 (from the file key)
+//   const { location: userImageUrl } = req.file ? req.file : {}; // This gives you the S3 URL
+
+//   if (!title) {
+//     return res.status(400).json({ error: "Title is required" });
+//   }
+
+//   if (!userImageUrl) {
+//     return res.status(400).json({ error: "User image URL is required" });
+//   }
+
+//   try {
+//     // Generate images with or without user image
+//     const imageUrls = await generateMultipleImages(
+//       title,
+//       "1024x1024",
+//       userImageUrl
+//     );
+
+//     // Save dream to database
+//     const dream = new Dream({
+//       title,
+//       content: `Images generated for: ${title}`,
+//       imageUrls,
+//       userImageUrl, // Store the S3 URL in the Dream document
+//       userId,
+//     });
+
+//     await dream.save(); // Save dream to the database
+
+//     res.status(201).json({
+//       message: "Dream generated successfully",
+//       dream,
+//     });
+//   } catch (error) {
+//     console.error("Error generating dream:", error);
+//     res.status(500).json({ error: "Failed to generate dream images" });
+//   }
+// };
+
 export const generateDream = async (req, res) => {
   const { title, userId } = req.body;
+  const { location: userImageUrl } = req.file ? req.file : {}; // S3 Image URL
 
-  // Get the uploaded image URL from S3 (from the file key)
-  const { location: userImageUrl } = req.file ? req.file : {}; // This gives you the S3 URL
-
+  // Validate required fields
   if (!title) {
     return res.status(400).json({ error: "Title is required" });
   }
@@ -291,24 +333,29 @@ export const generateDream = async (req, res) => {
     return res.status(400).json({ error: "User image URL is required" });
   }
 
+  // Ensure userId is valid
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID" });
+  }
+
   try {
-    // Generate images with or without user image
+    // Generate images
     const imageUrls = await generateMultipleImages(
       title,
       "1024x1024",
       userImageUrl
     );
 
-    // Save dream to database
+    // Save to database
     const dream = new Dream({
       title,
       content: `Images generated for: ${title}`,
       imageUrls,
-      userImageUrl, // Store the S3 URL in the Dream document
+      userImageUrl,
       userId,
     });
 
-    await dream.save(); // Save dream to the database
+    await dream.save();
 
     res.status(201).json({
       message: "Dream generated successfully",
