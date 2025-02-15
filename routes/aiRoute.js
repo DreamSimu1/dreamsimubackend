@@ -2,6 +2,7 @@ import express from "express";
 import authenticateUser from "../middleware/authMiddleware.js";
 import {
   generateDream,
+  getMilestonePlan,
   getTemplateVisionById,
   getTemplateVisions,
   saveTemplateVision,
@@ -59,5 +60,6 @@ router.get(
   authenticateUser,
   getTemplateVisionById
 );
+router.get("/generate-plan/:title", authenticateUser, getMilestonePlan);
 
 export default router;

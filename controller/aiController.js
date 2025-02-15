@@ -1,4 +1,7 @@
-import { generateMultipleImages } from "../services/openaiService.js";
+import {
+  generateMilestonePlan,
+  generateMultipleImages,
+} from "../services/openaiService.js";
 import Dream from "../models/DreamModel.js";
 import mongoose from "mongoose";
 
@@ -158,5 +161,20 @@ export const getTemplateVisionById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching vision:", error);
     res.status(500).json({ error: "Failed to fetch vision" });
+  }
+};
+export const getMilestonePlan = async (req, res) => {
+  const { title } = req.params;
+
+  if (!title) {
+    return res.status(400).json({ error: "Title is required" });
+  }
+
+  try {
+    const milestonePlan = await generateMilestonePlan(title);
+    res.json({ title, milestones: milestonePlan });
+  } catch (error) {
+    console.error("Error generating milestone plan:", error);
+    res.status(500).json({ error: "Failed to generate milestone plan" });
   }
 };

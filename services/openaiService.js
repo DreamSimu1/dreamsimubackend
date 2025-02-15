@@ -151,3 +151,58 @@ export async function callOpenAIForImages(
 
   return imageUrls; // Return the array of generated image URLs
 }
+// Function to call OpenAI dynamically for milestone generation
+// export const generateMilestonePlan = async (title) => {
+//   const prompt = `Generate a structured milestone plan for achieving the goal of becoming a "${title}". Include 5 key steps with explanations.`;
+
+//   for (let attempt = 0; attempt < 5; attempt++) {
+//     try {
+//       const response = await openai.chat.completions.create({
+//         model: "gpt-4", // Use GPT-4 for better results
+//         messages: [{ role: "user", content: prompt }],
+//         max_tokens: 500,
+//         temperature: 0.7,
+//       });
+
+//       return response.choices[0].message.content.trim();
+//     } catch (error) {
+//       if (error.status === 429) {
+//         console.warn("Rate limit exceeded. Retrying...");
+//         await waitForRetry(attempt);
+//       } else {
+//         console.error("OpenAI Error:", error);
+//         throw new Error("OpenAI API call failed");
+//       }
+//     }
+//   }
+//   throw new Error("Max retries exceeded");
+// };
+export const generateMilestonePlan = async (title) => {
+  const prompt = `Generate a structured milestone plan for achieving the goal of becoming a "${title}". Include 10 to 20 key steps without explanations. Each step should have a timeframe such as "2 years", "1 month", "1 week", or "24 hours". Format the response as a numbered list with each step followed by its timeframe in parentheses. Example format:
+  
+  1. Complete prerequisite courses (2 years)
+  2. Apply to medical school (6 months)
+  3. Attend medical school (4 years)`;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      return response.choices[0].message.content.trim();
+    } catch (error) {
+      if (error.status === 429) {
+        console.warn("Rate limit exceeded. Retrying...");
+        await waitForRetry(attempt);
+      } else {
+        console.error("OpenAI Error:", error);
+        throw new Error("OpenAI API call failed");
+      }
+    }
+  }
+  throw new Error("Max retries exceeded");
+};
