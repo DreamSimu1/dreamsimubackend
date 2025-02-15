@@ -124,6 +124,7 @@ export const signUp = async (req, res, next) => {
 //     next(error);
 //   }
 // };
+
 export const login = async (req, res, next) => {
   const { email, password, googleToken } = req.body;
 
@@ -151,7 +152,6 @@ export const login = async (req, res, next) => {
       }
     }
 
-    // ✅ Fix: Ensure `userId` is used in both cases
     const token = jwt.sign(
       { userId: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
@@ -179,7 +179,11 @@ export const getProfile = async (req, res) => {
         .json({ message: "User not found or token invalid" });
     }
 
-    const user = await User.findById(req.user._id).select("-password");
+    // const user = await User.findById(req.user.userId).select("-password");
+    const user = await User.findById(req.user.userId || req.user._id).select(
+      "-password"
+    );
+
     res.json({ user });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

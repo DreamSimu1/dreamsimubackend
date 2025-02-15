@@ -46,6 +46,7 @@ import jwt from "jsonwebtoken";
 //     return res.status(401).json({ message: "Token is not valid" });
 //   }
 // };
+
 const authenticateUser = (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
 
