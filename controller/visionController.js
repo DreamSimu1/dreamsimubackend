@@ -236,7 +236,10 @@ export const getSingleVisionByTitle = async (req, res) => {
 export const editVision = async (req, res) => {
   const { id } = req.params; // Get the Vision ID from the request params
   const { title, affirmation, statement, visibility } = req.body; // Get updated data from the request body
-  const { userId } = req.user; // Assuming you're using JWT authentication
+  const { _id } = req.user;
+  const userId = _id; // Assign _id to userId
+  console.log("req.user:", req.user);
+  console.log("Extracted userId:", userId);
 
   try {
     // Find the Vision by ID and check ownership

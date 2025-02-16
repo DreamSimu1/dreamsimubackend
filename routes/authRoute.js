@@ -134,14 +134,12 @@ router.get(
       const refreshToken = generateRefreshToken(user);
 
       // Log the tokens to ensure they are being generated properly
-      console.log("Generated token:", token);
-      console.log("Generated refreshToken:", refreshToken);
 
       // Redirecting user to frontend with tokens in query params
       const redirectUrl = `https://dreamsimu.com/vision?accessToken=${encodeURIComponent(
         token
       )}&refreshToken=${encodeURIComponent(refreshToken)}`;
-      console.log("Redirecting to:", redirectUrl); // Log the redirect URL
+
       res.redirect(redirectUrl);
     } catch (error) {
       console.error("Error during Google login:", error);

@@ -366,7 +366,11 @@ export const saveTask = async (req, res) => {
 // };
 
 export const createCalendarEvent = async (req, res) => {
-  const { userId } = req.user; // Use userId from JWT to identify the user
+  const { _id } = req.user;
+  const userId = _id; // Assign _id to userId
+  console.log("req.user:", req.user);
+  console.log("Extracted userId:", userId);
+
   const { title, description, startTime, endTime } = req.body;
 
   if (!title || !startTime || !endTime) {

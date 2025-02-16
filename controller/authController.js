@@ -127,6 +127,7 @@ export const signUp = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   const { email, password, googleToken } = req.body;
+  console.log("Login Request Received:", { email, googleToken });
 
   try {
     const user = await User.findOne({ email });
@@ -174,7 +175,7 @@ export const login = async (req, res, next) => {
 
 export const getProfile = async (req, res) => {
   try {
-    console.log("Request User:", req.user); // Debugging
+    console.log("Profile Request Received. User in Request:", req.user);
 
     if (!req.user) {
       return res
