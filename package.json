@@ -21,6 +21,7 @@
     "@aws-sdk/client-s3": "^3.490.0",
     "@smithy/node-http-handler": "^4.0.2",
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.41.1",
     "cloudinary": "^2.5.1",

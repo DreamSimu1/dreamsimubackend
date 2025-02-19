@@ -21,6 +21,7 @@ const s3 = new S3Client({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
+  signatureVersion: "v4",
 });
 
 const upload = multer({
@@ -33,6 +34,7 @@ const upload = multer({
       const fileKey = `dreams/${Date.now()}-${file.originalname}`;
       cb(null, fileKey);
     },
+    expires: 60 * 60 * 24 * 7,
   }),
 });
 
