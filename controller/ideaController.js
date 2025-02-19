@@ -148,43 +148,123 @@ cloudinary.config({
 //   }
 // };
 
+// export const createIdea = async (req, res) => {
+//   try {
+//     const { entries } = req.body; // Expecting an array of entries
+//     console.log("Received entries:", entries);
+
+//     if (!Array.isArray(entries) || entries.length === 0) {
+//       return res.status(400).json({ message: "Entries array is required" });
+//     }
+
+//     for (const entry of entries) {
+//       if (!entry.day || !entry.idea || !entry.visionId) {
+//         return res.status(400).json({
+//           message:
+//             "All fields (day, idea, visionId) are required for each entry",
+//         });
+//       }
+
+//       if (!mongoose.Types.ObjectId.isValid(entry.visionId)) {
+//         return res
+//           .status(400)
+//           .json({ message: `Invalid Vision ID: ${entry.visionId}` });
+//       }
+//     }
+
+//     const visionId = entries[0].visionId;
+//     const vision = await Dream.findById(visionId);
+//     if (!vision) {
+//       return res.status(404).json({ message: "Vision not found" });
+//     }
+
+//     let ideaDocument = await Idea.findOne({ visionId });
+
+//     if (!ideaDocument) {
+//       // If no idea document exists for this vision, create a new one
+//       ideaDocument = new Idea({
+//         visionId,
+//         createdBy: req.user.userId,
+//         ideas: entries.map(({ day, idea }) => ({ day, idea })),
+//       });
+//     } else {
+//       // If the document exists, update existing days or add new ones
+//       entries.forEach(({ day, idea }) => {
+//         const existingIdea = ideaDocument.ideas.find(
+//           (entry) => entry.day === day
+//         );
+
+//         if (existingIdea) {
+//           existingIdea.idea = idea; // Update idea for existing day
+//         } else {
+//           ideaDocument.ideas.push({ day, idea }); // Add new idea for new day
+//         }
+//       });
+//     }
+
+//     await ideaDocument.save();
+
+//     res.status(201).json({
+//       message: "Ideas updated successfully",
+//       ideaDocument,
+//     });
+//   } catch (error) {
+//     console.error("Error saving/updating ideas:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
 export const createIdea = async (req, res) => {
-  let { day, idea, visionId } = req.body;
-  console.log(req.body); // Check the fields in the body
-
-  // Validate required fields
-  if (!day || !idea || !visionId) {
-    return res
-      .status(400)
-      .json({ message: "All fields (day, idea, visionId) are required" });
-  }
-
-  // Validate visionId
-  if (!mongoose.Types.ObjectId.isValid(visionId)) {
-    return res.status(400).json({ message: "Invalid Vision ID" });
-  }
-
   try {
-    // Check if the vision exists
+    const { entries, visionId } = req.body; // Extract visionId properly
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return res.status(400).json({ message: "Entries array is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(visionId)) {
+      return res.status(400).json({ message: "Invalid Vision ID" });
+    }
+
     const vision = await Dream.findById(visionId);
     if (!vision) {
       return res.status(404).json({ message: "Vision not found" });
     }
 
-    // Create the idea entry with day and idea
-    const newEntry = await Idea.create({
-      day,
-      idea,
-      visionId,
-      createdBy: req.user.userId,
+    let ideaDocument = await Idea.findOne({ visionId });
+
+    if (!ideaDocument) {
+      ideaDocument = new Idea({
+        visionId,
+        createdBy: req.user.userId,
+        ideas: entries.map(({ day, idea }) => ({ day, idea })),
+      });
+
+      await ideaDocument.save();
+      return res
+        .status(201)
+        .json({ message: "New idea document created", ideaDocument });
+    }
+
+    // Update or add new ideas
+    entries.forEach(({ day, idea }) => {
+      const existingIdea = ideaDocument.ideas.find(
+        (entry) => entry.day === day
+      );
+      if (existingIdea) {
+        existingIdea.idea = idea;
+      } else {
+        ideaDocument.ideas.push({ day, idea });
+      }
     });
 
-    res.status(201).json({
-      message: "Idea saved successfully",
-      newEntry,
-    });
+    await ideaDocument.save();
+
+    res
+      .status(200)
+      .json({ message: "Ideas updated successfully", ideaDocument });
   } catch (error) {
-    console.error("Error saving idea:", error);
+    console.error("Error saving/updating ideas:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -319,53 +399,136 @@ export const getIdeasByVision = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+// export const updateIdea = async (req, res) => {
+//   const { id } = req.params;
+//   const { title, description, status, visionId } = req.body;
+
+//   // Validate at least one field is provided for update
+//   if (!title && !description && !status && !visionId) {
+//     return res
+//       .status(400)
+//       .json({ message: "At least one field is required to update" });
+//   }
+
+//   const validStatuses = ["InProgress", "Refinement", "Completed"];
+//   if (status && !validStatuses.includes(status)) {
+//     return res.status(400).json({ message: "Invalid status value" });
+//   }
+
+//   try {
+//     // Find the idea by ID
+//     const idea = await Idea.findById(id);
+//     if (!idea) {
+//       return res.status(404).json({ message: "Idea not found" });
+//     }
+
+//     // Ensure only the creator can edit the idea
+//     if (idea.createdBy.toString() !== req.user.userId) {
+//       return res
+//         .status(403)
+//         .json({ message: "Not authorized to edit this idea" });
+//     }
+
+//     // Update only provided fields
+//     if (title) idea.title = title;
+//     if (description) idea.description = description;
+//     if (status) idea.status = status;
+//     if (visionId) idea.visionId = visionId;
+
+//     // If a new image is uploaded, handle the image update
+//     if (req.file) {
+//       idea.imageUrl = req.file.location; // AWS S3 URL or Cloudinary URL
+//     }
+
+//     // Save the updated idea
+//     await idea.save();
+
+//     res.status(200).json({
+//       message: "Idea updated successfully",
+//       idea,
+//     });
+//   } catch (error) {
+//     console.error("Error updating idea:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+// export const updateIdea = async (req, res) => {
+//   try {
+//     const { id } = req.params; // Correct param name
+//     const { day, idea } = req.body; // Extract data from body
+
+//     if (!idea) {
+//       return res.status(400).json({ message: "Idea text is required" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid Vision ID" });
+//     }
+
+//     const ideaDocument = await Idea.findOne({ visionId: id });
+
+//     if (!ideaDocument) {
+//       return res.status(404).json({ message: "Idea document not found" });
+//     }
+
+//     // Find the existing idea by day
+//     let existingIdea = ideaDocument.ideas.find((entry) => entry.day == day);
+
+//     if (existingIdea) {
+//       existingIdea.idea = idea; // Update idea for that day
+//     } else {
+//       ideaDocument.ideas.push({ day, idea }); // Add new idea if not found
+//     }
+
+//     await ideaDocument.save();
+
+//     res
+//       .status(200)
+//       .json({ message: "Idea updated successfully", ideaDocument });
+//   } catch (error) {
+//     console.error("Error updating idea:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 export const updateIdea = async (req, res) => {
-  const { id } = req.params;
-  const { title, description, status, visionId } = req.body;
-
-  // Validate at least one field is provided for update
-  if (!title && !description && !status && !visionId) {
-    return res
-      .status(400)
-      .json({ message: "At least one field is required to update" });
-  }
-
-  const validStatuses = ["InProgress", "Refinement", "Completed"];
-  if (status && !validStatuses.includes(status)) {
-    return res.status(400).json({ message: "Invalid status value" });
-  }
-
   try {
-    // Find the idea by ID
-    const idea = await Idea.findById(id);
+    const { id } = req.params; // Vision ID from URL
+    const { day, idea } = req.body; // Extract day and idea (single update)
+
+    console.log("Updating idea for visionId:", id);
+    console.log("Day:", day, "New Idea:", idea);
+
     if (!idea) {
-      return res.status(404).json({ message: "Idea not found" });
+      return res.status(400).json({ message: "Idea text is required" });
     }
 
-    // Ensure only the creator can edit the idea
-    if (idea.createdBy.toString() !== req.user.userId) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to edit this idea" });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Vision ID" });
     }
 
-    // Update only provided fields
-    if (title) idea.title = title;
-    if (description) idea.description = description;
-    if (status) idea.status = status;
-    if (visionId) idea.visionId = visionId;
+    let ideaDocument = await Idea.findOne({ visionId: id });
 
-    // If a new image is uploaded, handle the image update
-    if (req.file) {
-      idea.imageUrl = req.file.location; // AWS S3 URL or Cloudinary URL
+    if (!ideaDocument) {
+      return res.status(404).json({ message: "Idea document not found" });
     }
 
-    // Save the updated idea
-    await idea.save();
+    // Fix: Ensure comparison is done with a string
+    let existingIdea = ideaDocument.ideas.find(
+      (entry) => entry.day === String(day)
+    );
+
+    if (existingIdea) {
+      existingIdea.idea = idea; // ✅ Update the existing idea for that day
+    } else {
+      return res.status(400).json({ message: `Day ${day} not found` });
+    }
+
+    await ideaDocument.save();
 
     res.status(200).json({
-      message: "Idea updated successfully",
-      idea,
+      message: `Idea for Day ${day} updated successfully`,
+      ideaDocument,
     });
   } catch (error) {
     console.error("Error updating idea:", error);
@@ -373,28 +536,67 @@ export const updateIdea = async (req, res) => {
   }
 };
 
+// export const getIdeaById = async (req, res) => {
+//   const { id } = req.params;
+
+//   // Validate the ID
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(400).json({ message: "Invalid idea ID" });
+//   }
+
+//   try {
+//     // Find the idea by ID
+//     const idea = await Idea.findById(id).populate("createdBy", "name email"); // Populate `createdBy` for additional details (optional)
+
+//     if (!idea) {
+//       return res.status(404).json({ message: "Idea not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "Idea fetched successfully",
+//       idea,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching idea:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+// export const getIdeaById = async (req, res) => {
+//   try {
+//     const { visionId, day } = req.params;
+
+//     const ideaDocument = await Idea.findOne({ visionId });
+
+//     if (!ideaDocument) {
+//       return res.status(404).json({ message: "Idea document not found" });
+//     }
+
+//     const ideaEntry = ideaDocument.ideas.find((entry) => entry.day == day);
+
+//     if (!ideaEntry) {
+//       return res.status(404).json({ message: "Idea for this day not found" });
+//     }
+
+//     res.status(200).json({ idea: ideaEntry.idea });
+//   } catch (error) {
+//     console.error("Error fetching idea:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
 export const getIdeaById = async (req, res) => {
-  const { id } = req.params;
-
-  // Validate the ID
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid idea ID" });
-  }
-
   try {
-    // Find the idea by ID
-    const idea = await Idea.findById(id).populate("createdBy", "name email"); // Populate `createdBy` for additional details (optional)
+    const { id } = req.params; // Get visionId from params
 
-    if (!idea) {
-      return res.status(404).json({ message: "Idea not found" });
+    const ideaDocument = await Idea.findOne({ visionId: id });
+
+    if (!ideaDocument) {
+      return res.status(404).json({ message: "Idea document not found" });
     }
 
-    res.status(200).json({
-      message: "Idea fetched successfully",
-      idea,
-    });
+    res.status(200).json({ ideas: ideaDocument.ideas }); // Return all ideas
   } catch (error) {
-    console.error("Error fetching idea:", error);
+    console.error("Error fetching ideas:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
