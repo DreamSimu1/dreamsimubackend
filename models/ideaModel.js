@@ -2,26 +2,25 @@ import mongoose from "mongoose";
 
 const IdeaSchema = new mongoose.Schema(
   {
-    title: {
+    day: {
       type: String,
-      required: [true, "Title is required"],
-      trim: true,
+      required: [true, "day is required"],
     },
-    description: {
+    idea: {
       type: String,
-      required: [true, "Description is required"],
+      required: [true, "idea is required"],
     },
-    status: {
-      type: String,
-      enum: ["InProgress", "Refinement", "Completed"],
-      default: "InProgress",
-    },
-    imageUrl: {
-      type: String,
-    },
+    // status: {
+    //   type: String,
+    //   enum: ["InProgress", "Refinement", "Completed"],
+    //   default: "InProgress",
+    // },
+    // imageUrl: {
+    //   type: String,
+    // },
     visionId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Vision",
+      ref: "Dream",
       required: [true, "Vision ID is required"],
     },
     createdBy: {

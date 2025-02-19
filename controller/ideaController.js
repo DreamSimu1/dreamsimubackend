@@ -6,6 +6,7 @@ import Vision from "../models/visionModel.js";
 import { S3Client } from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import multerS3 from "multer-s3";
+import Dream from "../models/DreamModel.js";
 dotenv.config();
 
 // Cloudinary configuration
@@ -148,62 +149,103 @@ cloudinary.config({
 // };
 
 export const createIdea = async (req, res) => {
-  let { title, description, status, visionId } = req.body;
+  let { day, idea, visionId } = req.body;
   console.log(req.body); // Check the fields in the body
-  console.log(req.file); // Check if the file is coming through correctly
 
-  // Trim any leading/trailing spaces from the `status` field
-  status = status ? status.trim() : "";
-
-  // Validate all required fields
-  if (!title || !description || !visionId || !status) {
-    return res.status(400).json({ message: "All fields are required" });
+  // Validate required fields
+  if (!day || !idea || !visionId) {
+    return res
+      .status(400)
+      .json({ message: "All fields (day, idea, visionId) are required" });
   }
 
-  // Ensure the status is valid
-  const validStatuses = ["InProgress", "Refinement", "Completed"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ message: "Invalid status value" });
-  }
-
-  // Validate visionId before querying the database
+  // Validate visionId
   if (!mongoose.Types.ObjectId.isValid(visionId)) {
     return res.status(400).json({ message: "Invalid Vision ID" });
   }
 
   try {
     // Check if the vision exists
-    const vision = await Vision.findById(visionId);
+    const vision = await Dream.findById(visionId);
     if (!vision) {
       return res.status(404).json({ message: "Vision not found" });
     }
 
-    let imageUrl = "";
-
-    // Handle image upload to AWS S3 (if file is provided)
-    if (req.file) {
-      imageUrl = req.file.location; // This is the S3 URL returned by multer-s3
-    }
-
-    // Create the idea
-    const idea = await Idea.create({
-      title,
-      description,
-      status,
+    // Create the idea entry with day and idea
+    const newEntry = await Idea.create({
+      day,
+      idea,
       visionId,
-      imageUrl, // Include image URL
       createdBy: req.user.userId,
     });
 
     res.status(201).json({
-      message: "Idea created successfully",
-      idea,
+      message: "Idea saved successfully",
+      newEntry,
     });
   } catch (error) {
-    console.error("Error creating idea:", error);
+    console.error("Error saving idea:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// export const createIdea = async (req, res) => {
+//   let { title, description, status, visionId } = req.body;
+//   console.log(req.body); // Check the fields in the body
+//   console.log(req.file); // Check if the file is coming through correctly
+
+//   // Trim any leading/trailing spaces from the `status` field
+//   status = status ? status.trim() : "";
+
+//   // Validate all required fields
+//   if (!title || !description || !visionId || !status) {
+//     return res.status(400).json({ message: "All fields are required" });
+//   }
+
+//   // Ensure the status is valid
+//   const validStatuses = ["InProgress", "Refinement", "Completed"];
+//   if (!validStatuses.includes(status)) {
+//     return res.status(400).json({ message: "Invalid status value" });
+//   }
+
+//   // Validate visionId before querying the database
+//   if (!mongoose.Types.ObjectId.isValid(visionId)) {
+//     return res.status(400).json({ message: "Invalid Vision ID" });
+//   }
+
+//   try {
+//     // Check if the vision exists
+//     const vision = await Vision.findById(visionId);
+//     if (!vision) {
+//       return res.status(404).json({ message: "Vision not found" });
+//     }
+
+//     let imageUrl = "";
+
+//     // Handle image upload to AWS S3 (if file is provided)
+//     if (req.file) {
+//       imageUrl = req.file.location; // This is the S3 URL returned by multer-s3
+//     }
+
+//     // Create the idea
+//     const idea = await Idea.create({
+//       title,
+//       description,
+//       status,
+//       visionId,
+//       imageUrl, // Include image URL
+//       createdBy: req.user.userId,
+//     });
+
+//     res.status(201).json({
+//       message: "Idea created successfully",
+//       idea,
+//     });
+//   } catch (error) {
+//     console.error("Error creating idea:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 // Controller to fetch all ideas created by the authenticated user
 export const getAllIdeas = async (req, res) => {
   try {

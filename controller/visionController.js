@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import multer from "multer";
 import mongoose from "mongoose";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
+import Dream from "../models/DreamModel.js";
 // dotenv.config();
 
 dotenv.config();
@@ -219,7 +220,7 @@ export const getSingleVisionByTitle = async (req, res) => {
   const { title } = req.params;
 
   try {
-    const vision = await Vision.findOne({ title }); // Fetch vision by title
+    const vision = await Dream.findOne({ title }); // Fetch vision by title
     if (!vision) {
       return res.status(404).json({ message: "Vision not found" });
     }

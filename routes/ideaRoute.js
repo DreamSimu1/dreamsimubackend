@@ -57,9 +57,15 @@ const upload = multer({
     },
   }),
 });
+// router.post(
+//   "/create-idea",
+//   upload.single("image"),
+//   authenticateUser,
+//   createIdea
+// );
 router.post(
-  "/create-idea",
-  upload.single("image"),
+  "/create-plan",
+
   authenticateUser,
   createIdea
 );
