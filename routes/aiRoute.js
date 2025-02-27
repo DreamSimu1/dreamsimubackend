@@ -1,10 +1,12 @@
 import express from "express";
 import authenticateUser from "../middleware/authMiddleware.js";
 import {
+  fetchFaceSwapResult,
   generateDream,
   getMilestonePlan,
   getTemplateVisionById,
   getTemplateVisions,
+  requestFaceSwap,
   saveTemplateVision,
 } from "../controller/aiController.js";
 import multer from "multer";
@@ -48,6 +50,15 @@ router.post(
   generateDream
 );
 router.post("/create-template-vision", authenticateUser, saveTemplateVision);
+
+// router.post("/face-swap", requestFaceSwap);
+router.post(
+  "/face-swap",
+  upload.fields([{ name: "target_image" }, { name: "swap_image" }]), // Use existing multer-s3 instance
+  requestFaceSwap
+);
+
+router.get("/fetch-result", fetchFaceSwapResult);
 
 // Route to get all template visions for a specific user
 router.get(
