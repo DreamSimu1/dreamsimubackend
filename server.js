@@ -37,7 +37,7 @@ const __dirname = dirname(__filename);
 // Configure CORS
 const corsOptions = {
   origin: [
-    "http://localhost:3001",
+    "http://localhost:3000",
     "http://localhost:5173",
     "https://dreamsimu.vercel.app",
     "https://www.dreamsimu.com",
