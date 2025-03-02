@@ -104,8 +104,7 @@ const upload = multer({
 
 export const createVision = async (req, res) => {
   const { title, affirmation, statement, visibility } = req.body;
-  const { userId } = req.user; // Assuming you're using JWT authentication to get the user ID
-  console.log("req.user:", req.user);
+  const userId = req.user?._id; // Correct extraction
 
   try {
     let imageUrl = "";
