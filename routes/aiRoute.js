@@ -6,6 +6,7 @@ import {
   getMilestonePlan,
   getTemplateVisionById,
   getTemplateVisions,
+  getTemplateVisionsBoard,
   requestFaceSwap,
   saveTemplateVision,
 } from "../controller/aiController.js";
@@ -65,6 +66,11 @@ router.get(
   "/get-template-visions/:userId",
   authenticateUser,
   getTemplateVisions
+);
+router.get(
+  "/get-template-visions-board/:userId",
+  authenticateUser,
+  getTemplateVisionsBoard
 );
 
 // Route to get a specific vision by ID

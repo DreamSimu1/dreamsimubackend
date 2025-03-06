@@ -26,6 +26,7 @@ const VisionSchema = new mongoose.Schema(
       ref: "User", // Assuming you're linking visions to a user
       required: true,
     },
+    board: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

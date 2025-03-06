@@ -172,6 +172,41 @@ export const createVision = async (req, res) => {
 //   }
 // };
 
+export const MovetoBoard = async (req, res) => {
+  try {
+    const vision = await Vision.findById(req.params.id);
+    if (!vision) {
+      return res.status(404).json({ message: "Vision not found" });
+    }
+
+    // Update the vision to mark it as moved to board
+    vision.board = true;
+    await vision.save();
+
+    res.status(200).json({ message: "Vision moved to board", vision });
+  } catch (error) {
+    console.error("Error moving vision:", error);
+    res.status(500).json({ message: "Failed to move vision" });
+  }
+};
+export const MovetoBoardTemplate = async (req, res) => {
+  try {
+    const dream = await Dream.findById(req.params.id);
+    if (!dream) {
+      return res.status(404).json({ message: "dream not found" });
+    }
+
+    // Update the vision to mark it as moved to board
+    dream.board = true;
+    await Dream.save();
+
+    res.status(200).json({ message: "dream moved to board", dream });
+  } catch (error) {
+    console.error("Error moving dream:", error);
+    res.status(500).json({ message: "Failed to move dream" });
+  }
+};
+
 export const getAllVisions = async (req, res) => {
   try {
     // Get the userId from the authentication middleware (JWT token)
@@ -180,7 +215,33 @@ export const getAllVisions = async (req, res) => {
     console.log("Fetching visions for userId:", userId);
 
     // Fetch visions created by this user
-    const visions = await Vision.find({ userId: userId });
+    const visions = await Vision.find({ userId: userId, board: false });
+
+    // Check if any visions are returned
+    if (visions.length === 0) {
+      console.log("No visions found for userId:", userId);
+    } else {
+      console.log("Visions fetched:", visions);
+    }
+
+    // Return the fetched visions
+    res.status(200).json(visions);
+  } catch (error) {
+    console.error("Error fetching visions:", error);
+    res.status(500).json({
+      message: "Failed to fetch visions",
+    });
+  }
+};
+export const getAllBoardVision = async (req, res) => {
+  try {
+    // Get the userId from the authentication middleware (JWT token)
+    // const userId = req.user.userId;
+    const userId = req.user._id;
+    console.log("Fetching visions for userId:", userId);
+
+    // Fetch visions created by this user
+    const visions = await Vision.find({ userId: userId, board: true });
 
     // Check if any visions are returned
     if (visions.length === 0) {

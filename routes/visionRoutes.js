@@ -6,6 +6,9 @@ import {
   getSingleVisionByTitle,
   editVision,
   deleteVision,
+  MovetoBoard,
+  MovetoBoardTemplate,
+  getAllBoardVision,
 } from "../controller/visionController.js";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
@@ -86,9 +89,16 @@ router.put(
 );
 
 // Delete Vision Route
+router.put("/move-to-board/:id", authenticateUser, MovetoBoard);
+router.put(
+  "/move-to-board-template/:id",
+  authenticateUser,
+  MovetoBoardTemplate
+);
 router.delete("/vision/:id", authenticateUser, deleteVision);
 
 // Get All Visions Route
 router.get("/get-all", authenticateUser, getAllVisions);
+router.get("/get-all-board", authenticateUser, getAllBoardVision);
 
 export default router;

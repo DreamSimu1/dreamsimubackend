@@ -1055,7 +1055,22 @@ export const getTemplateVisions = async (req, res) => {
   }
 
   try {
-    const visions = await Dream.find({ userId, isSaved: true }); // Only fetch saved visions
+    const visions = await Dream.find({ userId, isSaved: true, board: false }); // Only fetch saved visions
+    res.status(200).json(visions);
+  } catch (error) {
+    console.error("Error fetching visions:", error);
+    res.status(500).json({ error: "Failed to fetch visions" });
+  }
+};
+export const getTemplateVisionsBoard = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID" });
+  }
+
+  try {
+    const visions = await Dream.find({ userId, isSaved: true, board: true }); // Only fetch saved visions
     res.status(200).json(visions);
   } catch (error) {
     console.error("Error fetching visions:", error);
