@@ -172,6 +172,24 @@ export const createVision = async (req, res) => {
 //   }
 // };
 
+// export const MovetoBoard = async (req, res) => {
+//   try {
+//     const vision = await Vision.findById(req.params.id);
+//     if (!vision) {
+//       return res.status(404).json({ message: "Vision not found" });
+//     }
+
+//     // Update the vision to mark it as moved to board
+//     vision.board = true;
+//     await vision.save();
+
+//     res.status(200).json({ message: "Vision moved to board", vision });
+//   } catch (error) {
+//     console.error("Error moving vision:", error);
+//     res.status(500).json({ message: "Failed to move vision" });
+//   }
+// };
+
 export const MovetoBoard = async (req, res) => {
   try {
     const vision = await Vision.findById(req.params.id);
@@ -179,16 +197,25 @@ export const MovetoBoard = async (req, res) => {
       return res.status(404).json({ message: "Vision not found" });
     }
 
-    // Update the vision to mark it as moved to board
-    vision.board = true;
+    // Check if the request contains a valid "board" status
+    if (typeof req.body.board !== "boolean") {
+      return res.status(400).json({ message: "Invalid board status" });
+    }
+
+    // Update the board status based on request
+    vision.board = req.body.board;
     await vision.save();
 
-    res.status(200).json({ message: "Vision moved to board", vision });
+    res.status(200).json({
+      message: `Vision ${vision.board ? "moved to" : "removed from"} board`,
+      vision,
+    });
   } catch (error) {
-    console.error("Error moving vision:", error);
-    res.status(500).json({ message: "Failed to move vision" });
+    console.error("Error updating vision board status:", error);
+    res.status(500).json({ message: "Failed to update vision board status" });
   }
 };
+
 export const MovetoBoardTemplate = async (req, res) => {
   try {
     const dream = await Dream.findById(req.params.id);
