@@ -225,7 +225,7 @@ export const MovetoBoardTemplate = async (req, res) => {
 
     // Update the vision to mark it as moved to board
     dream.board = true;
-    await Dream.save();
+    await dream.save();
 
     res.status(200).json({ message: "dream moved to board", dream });
   } catch (error) {
