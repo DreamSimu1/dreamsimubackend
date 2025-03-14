@@ -128,7 +128,7 @@ export const generateMultipleImages = async (
 export async function callOpenAIForImages(
   prompt,
   size = "1024x1024",
-  numberOfImages = 3
+  numberOfImages = 1
 ) {
   const imageUrls = [];
 

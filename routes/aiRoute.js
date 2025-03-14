@@ -1,12 +1,14 @@
 import express from "express";
 import authenticateUser from "../middleware/authMiddleware.js";
 import {
+  checkFaceSwapStatus,
   fetchFaceSwapResult,
   generateDream,
   getMilestonePlan,
   getTemplateVisionById,
   getTemplateVisions,
   getTemplateVisionsBoard,
+  RemoveBg,
   requestFaceSwap,
   saveTemplateVision,
 } from "../controller/aiController.js";
@@ -31,7 +33,8 @@ const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: "eduprosolution",
-    acl: "private",
+    // acl: "private",
+    ACL: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
       const fileKey = `dreams/${Date.now()}-${file.originalname}`;
@@ -48,8 +51,18 @@ router.post(
   "/generate-dream",
   upload.single("image"),
   authenticateUser,
+  (req, res, next) => {
+    console.log("📂 Uploaded File:", req.file);
+    next();
+  },
   generateDream
 );
+
+// const upload = multer({ storage: multer.memoryStorage() }); // or multer-s3
+router.post("/generate-dream", upload.single("image"), generateDream);
+
+router.post("/remove-bg", upload.single("image"), authenticateUser, RemoveBg);
+
 router.post("/create-template-vision", authenticateUser, saveTemplateVision);
 
 // router.post("/face-swap", requestFaceSwap);
@@ -58,6 +71,7 @@ router.post(
   upload.fields([{ name: "target_image" }, { name: "swap_image" }]), // Use existing multer-s3 instance
   requestFaceSwap
 );
+router.get("/api/face_swap/status/:task_id", checkFaceSwapStatus);
 
 router.get("/fetch-result", fetchFaceSwapResult);
 
