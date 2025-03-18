@@ -697,6 +697,396 @@ const API_KEY = process.env.FACE_SWAP_API_KEY;
 //     if (fs.existsSync(tempUserFilePath)) fs.unlinkSync(tempUserFilePath);
 //   }
 // };
+
+// export const generateDream = async (req, res) => {
+//   console.log("📩 Received request to generate dream...");
+//   // const { title, userId } = req.body;
+//   const title = req.body.title || req.query.title;
+//   const userId = req.body.userId || req.query.userId;
+//   console.log("📌 Title:", title);
+//   console.log("📌 User ID:", userId);
+
+//   // const userImagePath = req.file?.path;
+//   const userImagePath = req.file?.location; // Use 'location' for S3 uploads
+
+//   if (!title || !userId || !userImagePath) {
+//     console.error("🚨 Missing Fields:", { title, userId, userImagePath });
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   try {
+//     console.log("🖼️ Generating AI Image...");
+//     const generatedImages = await generateMultipleImages(title);
+//     if (!generatedImages.length) throw new Error("AI Image generation failed");
+//     const targetImageUrl = generatedImages[0];
+//     console.log("✅ AI Generated Image URL:", targetImageUrl);
+
+//     // Prepare FormData for Face Swap API
+//     const formData = new FormData();
+//     formData.append("target_image", targetImageUrl);
+//     formData.append("swap_image", fs.createReadStream(userImagePath));
+
+//     console.log("🚀 Calling Face Swap API...");
+//     const swapResponse = await axios.post(
+//       "https://api.piapi.ai/api/v1/task",
+//       formData,
+//       {
+//         headers: {
+//           "X-API-Key": process.env.PIAPI_KEY,
+//           ...formData.getHeaders(),
+//         },
+//       }
+//     );
+
+//     const taskId = swapResponse?.data?.task_id;
+//     if (!taskId) throw new Error("No task ID returned from PiAPI");
+//     console.log("🆔 Task ID:", taskId);
+
+//     // Polling for face swap completion
+//     let swappedImageUrl = null;
+//     for (let i = 0; i < 10; i++) {
+//       await new Promise((resolve) => setTimeout(resolve, 20000));
+//       const statusResponse = await axios.get(
+//         `https://api.piapi.ai/api/v1/task/${taskId}`,
+//         {
+//           headers: { "X-API-Key": process.env.PIAPI_KEY },
+//         }
+//       );
+//       if (statusResponse.data?.data?.status === "completed") {
+//         swappedImageUrl = statusResponse.data.data.output.image_url;
+//         break;
+//       }
+//     }
+//     if (!swappedImageUrl) throw new Error("Face swap not completed");
+
+//     console.log("🎭 Face swap successful! Image URL:", swappedImageUrl);
+
+//     const dream = new Dream({ title, userId, imageUrls: [swappedImageUrl] });
+//     await dream.save();
+
+//     res.status(201).json({
+//       message: "Dream generated successfully",
+//       image: swappedImageUrl,
+//       dream,
+//     });
+//   } catch (error) {
+//     console.error("🚨 Error:", error);
+//     res.status(500).json({ error: error.message });
+//   } finally {
+//     if (fs.existsSync(userImagePath)) fs.unlinkSync(userImagePath);
+//   }
+// };
+
+// export const generateDream = async (req, res) => {
+//   console.log("📩 Received request to generate dream...");
+
+//   const title = req.body.title || req.query.title;
+//   const userId = req.body.userId || req.query.userId;
+//   const userImageUrl = req.file?.location; // S3 URL
+
+//   if (!title || !userId || !userImageUrl) {
+//     console.error("🚨 Missing Fields:", { title, userId, userImageUrl });
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   try {
+//     console.log("🖼️ Generating AI Image...");
+//     const generatedImages = await generateMultipleImages(title);
+//     if (!generatedImages.length) throw new Error("AI Image generation failed");
+//     const targetImageUrl = generatedImages[0];
+//     console.log("✅ AI Generated Image URL:", targetImageUrl);
+
+//     // Download user image from S3
+//     console.log("⬇️ Downloading user image...");
+//     const imageResponse = await axios.get(userImageUrl, {
+//       responseType: "arraybuffer",
+//     });
+//     const tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
+//     fs.writeFileSync(tempImagePath, imageResponse.data);
+
+//     // Prepare FormData for Face Swap API
+//     const formData = new FormData();
+//     formData.append("target_image", targetImageUrl);
+//     formData.append("swap_image", fs.createReadStream(tempImagePath));
+
+//     console.log("🚀 Calling Face Swap API...");
+//     const swapResponse = await axios.post(
+//       "https://api.piapi.ai/api/v1/task",
+//       formData,
+//       {
+//         headers: {
+//           "X-API-Key": process.env.FACE_SWAP_API_KEY,
+//           ...formData.getHeaders(),
+//         },
+//       }
+//     );
+
+//     const taskId = swapResponse?.data?.task_id;
+//     if (!taskId) throw new Error("No task ID returned from PiAPI");
+//     console.log("🆔 Task ID:", taskId);
+
+//     // Polling for face swap completion
+//     let swappedImageUrl = null;
+//     for (let i = 0; i < 10; i++) {
+//       await new Promise((resolve) => setTimeout(resolve, 20000));
+//       const statusResponse = await axios.get(
+//         `https://api.piapi.ai/api/v1/task/${taskId}`,
+//         {
+//           headers: { "X-API-Key": process.env.FACE_SWAP_API_KEY },
+//         }
+//       );
+//       if (statusResponse.data?.data?.status === "completed") {
+//         swappedImageUrl = statusResponse.data.data.output.image_url;
+//         break;
+//       }
+//     }
+//     if (!swappedImageUrl) throw new Error("Face swap not completed");
+
+//     console.log("🎭 Face swap successful! Image URL:", swappedImageUrl);
+
+//     const dream = new Dream({ title, userId, imageUrls: [swappedImageUrl] });
+//     await dream.save();
+
+//     res.status(201).json({
+//       message: "Dream generated successfully",
+//       image: swappedImageUrl,
+//       dream,
+//     });
+//   } catch (error) {
+//     console.error("🚨 Error:", error);
+//     res.status(500).json({ error: error.message });
+//   } finally {
+//     if (tempImagePath && fs.existsSync(tempImagePath))
+//       fs.unlinkSync(tempImagePath);
+//   }
+// };
+// export const generateDream = async (req, res) => {
+//   console.log("📩 Received request to generate dream...");
+
+//   const title = req.body.title || req.query.title;
+//   const userId = req.body.userId || req.query.userId;
+//   const userImageUrl = req.file?.location; // S3 URL
+
+//   if (!title || !userId || !userImageUrl) {
+//     console.error("🚨 Missing Fields:", { title, userId, userImageUrl });
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   let tempImagePath = null; // Define outside try block
+
+//   try {
+//     console.log("🖼️ Generating AI Image...");
+//     const generatedImages = await generateMultipleImages(title);
+//     if (!generatedImages.length) throw new Error("AI Image generation failed");
+//     const targetImageUrl = generatedImages[0];
+//     console.log("✅ AI Generated Image URL:", targetImageUrl);
+
+//     // Download user image from S3
+//     console.log("⬇️ Downloading user image...");
+//     const imageResponse = await axios.get(userImageUrl, {
+//       responseType: "arraybuffer",
+//     });
+
+//     tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
+//     fs.writeFileSync(tempImagePath, imageResponse.data);
+
+//     // Prepare FormData for Face Swap API
+//     const formData = new FormData();
+//     formData.append("target_image", targetImageUrl);
+//     formData.append("swap_image", fs.createReadStream(tempImagePath));
+
+//     console.log("🛠️ FormData Debug:");
+//     console.log("Target Image:", targetImageUrl);
+//     console.log("Swap Image Path:", tempImagePath);
+
+//     console.log("🚀 Calling Face Swap API...");
+//     const swapResponse = await axios.post(
+//       "https://api.piapi.ai/api/v1/task",
+//       formData,
+//       {
+//         headers: {
+//           "X-API-Key": process.env.FACE_SWAP_API_KEY,
+//           ...formData.getHeaders(),
+//         },
+//       }
+//     );
+
+//     if (!swapResponse.data?.task_id) throw new Error("No task ID from PiAPI");
+//     const taskId = swapResponse.data.task_id;
+//     console.log("🆔 Task ID:", taskId);
+
+//     // Poll for face swap completion
+//     let swappedImageUrl = null;
+//     for (let i = 0; i < 10; i++) {
+//       await new Promise((resolve) => setTimeout(resolve, 20000));
+//       const statusResponse = await axios.get(
+//         `https://api.piapi.ai/api/v1/task/${taskId}`,
+//         {
+//           headers: { "X-API-Key": process.env.FACE_SWAP_API_KEY },
+//         }
+//       );
+
+//       if (statusResponse.data?.data?.status === "completed") {
+//         swappedImageUrl = statusResponse.data.data.output.image_url;
+//         break;
+//       }
+//     }
+
+//     if (!swappedImageUrl) throw new Error("Face swap not completed");
+
+//     console.log("🎭 Face swap successful! Image URL:", swappedImageUrl);
+
+//     const dream = new Dream({ title, userId, imageUrls: [swappedImageUrl] });
+//     await dream.save();
+
+//     res.status(201).json({
+//       message: "Dream generated successfully",
+//       image: swappedImageUrl,
+//       dream,
+//     });
+//   } catch (error) {
+//     console.error("🚨 Error:", error.response?.data || error.message);
+//     res.status(500).json({ error: error.message });
+//   } finally {
+//     if (tempImagePath && fs.existsSync(tempImagePath)) {
+//       fs.unlinkSync(tempImagePath);
+//       console.log("🗑️ Temporary file deleted:", tempImagePath);
+//     }
+//   }
+// };
+
+export const generateDream = async (req, res) => {
+  console.log("📩 Received request to generate dream...");
+
+  const title = req.body.title || req.query.title;
+  const userId = req.body.userId || req.query.userId;
+  const userImageUrl = req.file?.location; // S3 URL
+  console.log("Incoming File:", req.file);
+
+  console.log("Final Payload Before Saving:", req.body);
+
+  console.log("📝 Incoming Data:", { title, userId, userImageUrl });
+
+  if (!title || !userId || !userImageUrl) {
+    console.error("🚨 Missing Fields:", { title, userId, userImageUrl });
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  let tempImagePath = null;
+
+  try {
+    // Generate AI Image
+    console.log("🖼️ Generating AI Image...");
+    const generatedImages = await generateMultipleImages(title);
+    if (!generatedImages.length) throw new Error("AI Image generation failed");
+
+    const targetImageUrl = generatedImages[0];
+    console.log("✅ AI Generated Image URL:", targetImageUrl);
+
+    // Download user image from S3
+    console.log("⬇️ Downloading user image from:", userImageUrl);
+    const imageResponse = await axios.get(userImageUrl, {
+      responseType: "arraybuffer",
+    });
+
+    tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
+    fs.writeFileSync(tempImagePath, imageResponse.data);
+    console.log("📂 User image saved at:", tempImagePath);
+
+    // Validate if file exists
+    if (!fs.existsSync(tempImagePath)) {
+      throw new Error("Failed to save user image for processing");
+    }
+
+    // Prepare JSON Payload for Face Swap API
+    const payload = {
+      model: "Qubico/image-toolkit",
+      task_type: "face-swap",
+      input: {
+        target_image: targetImageUrl, // AI-generated image URL
+        swap_image: userImageUrl, // User image URL from S3
+      },
+    };
+
+    console.log(
+      "📦 JSON Payload being sent:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    // Call Face Swap API
+    console.log("🚀 Calling Face Swap API...");
+    const swapResponse = await axios.post(
+      "https://api.piapi.ai/api/v1/task",
+      payload,
+      {
+        headers: {
+          "X-API-Key": process.env.FACE_SWAP_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Face Swap API Response:", swapResponse.data);
+
+    // const taskId = swapResponse?.data?.task_id;
+    // const taskId = swapResponse?.data?.task_id;
+    const taskId = swapResponse?.data?.data?.task_id;
+
+    if (!taskId) {
+      console.error("🚨 No task ID found! API Response:", swapResponse.data);
+      throw new Error("No task ID returned from PiAPI");
+    }
+
+    console.log("🆔 Task ID:", taskId);
+
+    // Polling for face swap completion
+    let swappedImageUrl = null;
+    for (let i = 0; i < 10; i++) {
+      console.log(`⏳ Checking face swap status... Attempt ${i + 1}`);
+      await new Promise((resolve) => setTimeout(resolve, 20000));
+
+      const statusResponse = await axios.get(
+        `https://api.piapi.ai/api/v1/task/${taskId}`,
+        {
+          headers: { "X-API-Key": process.env.FACE_SWAP_API_KEY },
+        }
+      );
+
+      console.log("📡 Face Swap Status:", statusResponse.data);
+
+      if (statusResponse.data?.data?.status === "completed") {
+        swappedImageUrl = statusResponse.data.data.output.image_url;
+        break;
+      }
+    }
+
+    if (!swappedImageUrl) throw new Error("Face swap not completed");
+
+    console.log("🎭 Face swap successful! Image URL:", swappedImageUrl);
+
+    // Save the generated dream to the database
+    const dream = new Dream({ title, userId, imageUrls: [swappedImageUrl] });
+    await dream.save();
+    console.log("💾 Dream saved to database:", dream);
+
+    res.status(201).json({
+      message: "Dream generated successfully",
+      image: swappedImageUrl,
+      task_id: taskId,
+      dream,
+    });
+  } catch (error) {
+    console.error("🚨 Error:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    // Cleanup: Delete temporary file
+    if (tempImagePath && fs.existsSync(tempImagePath)) {
+      fs.unlinkSync(tempImagePath);
+      console.log("🗑️ Temporary file deleted:", tempImagePath);
+    }
+  }
+};
+
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
@@ -916,124 +1306,33 @@ const downloadImage = async (imageUrl, outputPath) => {
   fs.writeFileSync(outputPath, response.data);
 };
 
-// const downloadImage = async (imageUrl) => {
-//   const response = await axios({
-//     url: imageUrl,
-//     method: "GET",
-//     responseType: "arraybuffer",
-//   });
-
-//   const tempFilePath = path.join(tempDir, `${Date.now()}.png`);
-
-//   await promisify(fs.writeFile)(tempFilePath, response.data);
-
-//   return tempFilePath;
-// };
-
-export const generateDream = async (req, res) => {
-  try {
-    console.log("📩 Received request to generate dream...");
-    const { title, userId } = req.body;
-    const userImageFile = req.file;
-
-    if (!title || !userId || !userImageFile?.location) {
-      console.error("🚨 Missing required fields");
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    console.log("✅ File is available at:", userImageFile.location);
-    const fileKey = userImageFile.key;
-
-    // Step 1: Download the image from S3
-    const tempFilePath = `/tmp/${path.basename(fileKey)}`;
-    await downloadImage(userImageFile.location, tempFilePath);
-    console.log("📥 Image downloaded from S3:", tempFilePath);
-
-    // Step 2: Remove Background
-    const formData = new FormData();
-    formData.append("image_file", fs.createReadStream(tempFilePath));
-    formData.append("size", "auto");
-    formData.append("format", "png");
-
-    console.log("📤 Sending image to Remove.bg...");
-    const bgRemovalResponse = await axios.post(
-      "https://api.remove.bg/v1.0/removebg",
-      formData,
-      {
-        headers: {
-          "X-Api-Key": REMOVE_BG_API_KEY,
-          ...formData.getHeaders(),
-        },
-        responseType: "arraybuffer",
-      }
-    );
-
-    console.log("✅ Background removed successfully");
-
-    // Save the removed background image
-    const removedBgPath = `/tmp/removed_bg_${Date.now()}.png`;
-    fs.writeFileSync(removedBgPath, bgRemovalResponse.data);
-
-    // Step 3: Generate AI Image
-    const generatedImages = await generateMultipleImages(title, "1024x1024");
-    console.log("📩 AI Image Generation Response:", generatedImages);
-
-    if (!generatedImages || generatedImages.length === 0) {
-      console.error("🚨 AI Image generation failed: No images received.");
-      return res.status(500).json({ error: "AI Image generation failed" });
-    }
-
-    const aiImageUrl = generatedImages[0];
-    console.log("✅ AI Generated Image URL:", aiImageUrl);
-
-    // Step 4: Download AI-generated image
-    const aiImagePath = `/tmp/ai_generated_${Date.now()}.png`;
-    await downloadImage(aiImageUrl, aiImagePath);
-    console.log("📥 AI Generated Image downloaded:", aiImagePath);
-
-    // Step 5: Overlay removed background image on AI-generated image
-    const finalImagePath = `/tmp/final_dream_${Date.now()}.png`;
-
-    await sharp(aiImagePath)
-      .composite([{ input: removedBgPath, gravity: "center" }])
-      .toFile(finalImagePath);
-
-    console.log("✅ Image composited successfully:", finalImagePath);
-
-    // Step 6: Upload final image to S3
-    const finalImageUrl = await uploadToS3(
-      finalImagePath,
-      `final_dreams/${Date.now()}_${path.basename(finalImagePath)}`
-    );
-    console.log("📤 Final image uploaded to S3:", finalImageUrl);
-
-    // Cleanup temporary files
-    [tempFilePath, removedBgPath, aiImagePath, finalImagePath].forEach((file) =>
-      fs.unlinkSync(file)
-    );
-    console.log("🗑️ Temporary files deleted");
-
-    res.json({ imagePath: finalImageUrl });
-  } catch (error) {
-    console.error("🚨 Error generating dream:", error.message);
-    res.status(500).json({ error: "Failed to process image" });
-  }
-};
-
-const REMOVE_BG_API_KEY = process.env.REMOVE_API_KEY;
-
-// export const RemoveBg = async (req, res) => {
+// export const generateDream = async (req, res) => {
 //   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No image uploaded" });
+//     console.log("📩 Received request to generate dream...");
+//     const { title, userId } = req.body;
+//     const userImageFile = req.file;
+
+//     if (!title || !userId || !userImageFile?.location) {
+//       console.error("🚨 Missing required fields");
+//       return res.status(400).json({ error: "Missing required fields" });
 //     }
 
-//     const filePath = req.file.path;
-//     const formData = new FormData();
-//     formData.append("image_file", fs.createReadStream(filePath));
-//     formData.append("size", "auto");
+//     console.log("✅ File is available at:", userImageFile.location);
+//     const fileKey = userImageFile.key;
 
-//     const response = await axios.post(
+//     // Step 1: Download the image from S3
+//     const tempFilePath = `/tmp/${path.basename(fileKey)}`;
+//     await downloadImage(userImageFile.location, tempFilePath);
+//     console.log("📥 Image downloaded from S3:", tempFilePath);
+
+//     // Step 2: Remove Background
+//     const formData = new FormData();
+//     formData.append("image_file", fs.createReadStream(tempFilePath));
+//     formData.append("size", "auto");
+//     formData.append("format", "png");
+
+//     console.log("📤 Sending image to Remove.bg...");
+//     const bgRemovalResponse = await axios.post(
 //       "https://api.remove.bg/v1.0/removebg",
 //       formData,
 //       {
@@ -1041,22 +1340,63 @@ const REMOVE_BG_API_KEY = process.env.REMOVE_API_KEY;
 //           "X-Api-Key": REMOVE_BG_API_KEY,
 //           ...formData.getHeaders(),
 //         },
-//         responseType: "arraybuffer", // Expect binary data as response
+//         responseType: "arraybuffer",
 //       }
 //     );
 
-//     if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Cleanup uploaded file
+//     console.log("✅ Background removed successfully");
 
-//     res.set("Content-Type", "image/png");
-//     res.send(response.data);
-//   } catch (error) {
-//     console.error(
-//       "Error removing background:",
-//       error.response?.data || error.message
+//     // Save the removed background image
+//     const removedBgPath = `/tmp/removed_bg_${Date.now()}.png`;
+//     fs.writeFileSync(removedBgPath, bgRemovalResponse.data);
+
+//     // Step 3: Generate AI Image
+//     const generatedImages = await generateMultipleImages(title, "1024x1024");
+//     console.log("📩 AI Image Generation Response:", generatedImages);
+
+//     if (!generatedImages || generatedImages.length === 0) {
+//       console.error("🚨 AI Image generation failed: No images received.");
+//       return res.status(500).json({ error: "AI Image generation failed" });
+//     }
+
+//     const aiImageUrl = generatedImages[0];
+//     console.log("✅ AI Generated Image URL:", aiImageUrl);
+
+//     // Step 4: Download AI-generated image
+//     const aiImagePath = `/tmp/ai_generated_${Date.now()}.png`;
+//     await downloadImage(aiImageUrl, aiImagePath);
+//     console.log("📥 AI Generated Image downloaded:", aiImagePath);
+
+//     // Step 5: Overlay removed background image on AI-generated image
+//     const finalImagePath = `/tmp/final_dream_${Date.now()}.png`;
+
+//     await sharp(aiImagePath)
+//       .composite([{ input: removedBgPath, gravity: "center" }])
+//       .toFile(finalImagePath);
+
+//     console.log("✅ Image composited successfully:", finalImagePath);
+
+//     // Step 6: Upload final image to S3
+//     const finalImageUrl = await uploadToS3(
+//       finalImagePath,
+//       `final_dreams/${Date.now()}_${path.basename(finalImagePath)}`
 //     );
+//     console.log("📤 Final image uploaded to S3:", finalImageUrl);
+
+//     // Cleanup temporary files
+//     [tempFilePath, removedBgPath, aiImagePath, finalImagePath].forEach((file) =>
+//       fs.unlinkSync(file)
+//     );
+//     console.log("🗑️ Temporary files deleted");
+
+//     res.json({ imagePath: finalImageUrl });
+//   } catch (error) {
+//     console.error("🚨 Error generating dream:", error.message);
 //     res.status(500).json({ error: "Failed to process image" });
 //   }
 // };
+
+const REMOVE_BG_API_KEY = process.env.REMOVE_API_KEY;
 
 // export const requestFaceSwap = async (req, res) => {
 //   try {
@@ -1179,86 +1519,7 @@ const uploadToS3 = async (filePath, key) => {
 };
 
 // Remove background function
-// export const RemoveBg = async (req, res) => {
-//   try {
-//     console.log("Received file:", req.file);
 
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No image uploaded" });
-//     }
-
-//     const fileUrl = req.file.location;
-//     const fileKey = req.file.key;
-//     const bucketName = "eduprosolution";
-
-//     console.log("File URL:", fileUrl);
-//     console.log("File Key:", fileKey);
-
-//     // Step 1: Download image from S3
-//     const tempFilePath = await downloadFileFromS3(bucketName, fileKey);
-//     console.log("Temporary File Path:", tempFilePath);
-
-//     // Step 2: Send image to Remove.bg API
-//     const formData = new FormData();
-//     formData.append("image_file", fs.createReadStream(tempFilePath));
-//     formData.append("size", "auto");
-//     formData.append("format", "png");
-//     const response = await axios.post(
-//       "https://api.remove.bg/v1.0/removebg",
-//       formData,
-//       {
-//         headers: {
-//           "X-Api-Key": REMOVE_BG_API_KEY,
-//           ...formData.getHeaders(),
-//         },
-//         responseType: "arraybuffer",
-//         params: {
-//           format: "png", // 🔥 Ensure output is PNG (supports transparency)
-//         },
-//       }
-//     );
-
-//     console.log("✅ Background removed successfully");
-//     console.log("Response Headers:", response.headers);
-
-//     // const processedFilePath = `/tmp/processed_${fileKey}`;
-
-//     const processedFilePath = `/tmp/processed_${Date.now()}_${
-//       path.parse(fileKey).name
-//     }.png`;
-
-//     fs.writeFileSync(processedFilePath, response.data); // Save locally
-//     await sharp(processedFilePath)
-//       .png({ force: true }) // Ensure PNG format
-//       .toFile(processedFilePath);
-
-//     // Upload processed image back to S3
-//     const processedImageUrl = await uploadToS3(
-//       processedFilePath,
-//       // `processed/${fileKey}`
-//       `processed/${path.parse(fileKey).name}.png`
-//     );
-
-//     console.log("📤 Processed image uploaded to S3:", processedImageUrl);
-
-//     // Cleanup
-//     fs.unlinkSync(tempFilePath);
-//     fs.unlinkSync(processedFilePath);
-//     console.log("🗑️ Temporary files deleted");
-
-//     // Step 4: Delete original file from S3
-//     await s3.send(
-//       new DeleteObjectCommand({ Bucket: bucketName, Key: fileKey })
-//     );
-//     console.log("🗑️ Original file deleted from S3:", fileKey);
-
-//     // Step 5: Return processed image URL
-//     res.json({ imagePath: processedImageUrl });
-//   } catch (error) {
-//     console.error("🚨 Error removing background:", error.message);
-//     res.status(500).json({ error: "Failed to process image" });
-//   }
-// };
 // ✅ Main RemoveBg function
 export const RemoveBg = async (req, res) => {
   try {
@@ -1351,8 +1612,12 @@ export const requestFaceSwap = async (req, res) => {
     const swap_image = req.files["swap_image"][0].location;
 
     const requestBody = {
-      target_image,
-      swap_image,
+      model: "Qubico/image-toolkit",
+      task_type: "face-swap",
+      input: {
+        image_target: target_image, // Target image (background)
+        image_source: swap_image, // Face to swap
+      },
       result_type: "url",
     };
 
@@ -1551,16 +1816,26 @@ export const fetchFaceSwapResult = async (req, res) => {
     let swappedImageUrl = null;
     let attempts = 0;
     const maxAttempts = 10;
-    const delay = 15000; // 3 seconds between requests
+    const delay = 3000; // ✅ Wait for 3 seconds before retrying
 
     while (attempts < maxAttempts) {
+      // const response = await axios.get(
+      //   "https://api.piapi.ai/api/face_swap/v1/result/" + task_id,
+      //   {},
+      //   {
+      //     headers: {
+      //       "X-API-Key": API_KEY,
+      //       "Content-Type": "application/json",
+      //       Accept: "application/json",
+      //     },
+      //   }
+      // );
+
       const response = await axios.get(
-        "https://api.piapi.ai/api/face_swap/v1/result/" + task_id,
-        {},
+        `https://api.piapi.ai/api/v1/task/${task_id}`,
         {
           headers: {
             "X-API-Key": API_KEY,
-            "Content-Type": "application/json",
             Accept: "application/json",
           },
         }

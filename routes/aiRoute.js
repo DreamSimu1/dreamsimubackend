@@ -59,7 +59,6 @@ router.post(
 );
 
 // const upload = multer({ storage: multer.memoryStorage() }); // or multer-s3
-router.post("/generate-dream", upload.single("image"), generateDream);
 
 router.post("/remove-bg", upload.single("image"), authenticateUser, RemoveBg);
 
@@ -71,7 +70,7 @@ router.post(
   upload.fields([{ name: "target_image" }, { name: "swap_image" }]), // Use existing multer-s3 instance
   requestFaceSwap
 );
-router.get("/api/face_swap/status/:task_id", checkFaceSwapStatus);
+router.get("/face_swap/status/:task_id", checkFaceSwapStatus);
 
 router.get("/fetch-result", fetchFaceSwapResult);
 

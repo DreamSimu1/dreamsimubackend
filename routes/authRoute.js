@@ -6,6 +6,7 @@ import {
   login,
   forgotPassword,
   getProfile,
+  refreshToken,
 } from "../controller/authController.js";
 import { protect } from "../middleware/protectUser.js";
 import User from "../models/userModel.js";
@@ -20,6 +21,7 @@ const router = express.Router();
 // router.post('/login', signin);
 router.post("/auth/signup", signUp);
 router.post("/auth/login", login);
+router.post("/auth/refresh-token", refreshToken);
 
 // Google login route - redirects to Google OAuth for authentication
 router.get(
