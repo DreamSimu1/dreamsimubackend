@@ -955,6 +955,147 @@ const API_KEY = process.env.FACE_SWAP_API_KEY;
 //   }
 // };
 
+// export const generateDream = async (req, res) => {
+//   console.log("📩 Received request to generate dream...");
+
+//   const title = req.body.title || req.query.title;
+//   const userId = req.body.userId || req.query.userId;
+//   const userImageUrl = req.file?.location; // S3 URL
+//   console.log("Incoming File:", req.file);
+
+//   console.log("Final Payload Before Saving:", req.body);
+
+//   console.log("📝 Incoming Data:", { title, userId, userImageUrl });
+
+//   if (!title || !userId || !userImageUrl) {
+//     console.error("🚨 Missing Fields:", { title, userId, userImageUrl });
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   let tempImagePath = null;
+
+//   try {
+//     // Generate AI Image
+//     console.log("🖼️ Generating AI Image...");
+//     const generatedImages = await generateMultipleImages(title);
+//     if (!generatedImages.length) throw new Error("AI Image generation failed");
+
+//     const targetImageUrl = generatedImages[0];
+//     console.log("✅ AI Generated Image URL:", targetImageUrl);
+
+//     // Download user image from S3
+//     console.log("⬇️ Downloading user image from:", userImageUrl);
+//     const imageResponse = await axios.get(userImageUrl, {
+//       responseType: "arraybuffer",
+//     });
+
+//     // tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
+//     // fs.writeFileSync(tempImagePath, imageResponse.data);
+//     // console.log("📂 User image saved at:", tempImagePath);
+
+//     const fileKey = `processed_images/user_image_${Date.now()}.jpg`;
+//     const userImageBuffer = Buffer.from(imageResponse.data);
+//     const userImageUrlFromS3 = await uploadToS3(
+//       userImageBuffer,
+//       fileKey,
+//       "image/jpeg"
+//     );
+//     console.log("✅ Uploaded user image to S3:", userImageUrlFromS3);
+
+//     // Validate if file exists
+//     if (!fs.existsSync(tempImagePath)) {
+//       throw new Error("Failed to save user image for processing");
+//     }
+
+//     // Prepare JSON Payload for Face Swap API
+//     const payload = {
+//       model: "Qubico/image-toolkit",
+//       task_type: "face-swap",
+//       input: {
+//         target_image: targetImageUrl, // AI-generated image URL
+//         swap_image: userImageUrl, // User image URL from S3
+//       },
+//     };
+
+//     console.log(
+//       "📦 JSON Payload being sent:",
+//       JSON.stringify(payload, null, 2)
+//     );
+
+//     // Call Face Swap API
+//     console.log("🚀 Calling Face Swap API...");
+//     const swapResponse = await axios.post(
+//       "https://api.piapi.ai/api/v1/task",
+//       payload,
+//       {
+//         headers: {
+//           "X-API-Key": process.env.FACE_SWAP_API_KEY,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("✅ Face Swap API Response:", swapResponse.data);
+
+//     // const taskId = swapResponse?.data?.task_id;
+//     // const taskId = swapResponse?.data?.task_id;
+//     const taskId = swapResponse?.data?.data?.task_id;
+
+//     if (!taskId) {
+//       console.error("🚨 No task ID found! API Response:", swapResponse.data);
+//       throw new Error("No task ID returned from PiAPI");
+//     }
+
+//     console.log("🆔 Task ID:", taskId);
+
+//     // Polling for face swap completion
+//     let swappedImageUrl = null;
+//     for (let i = 0; i < 10; i++) {
+//       console.log(`⏳ Checking face swap status... Attempt ${i + 1}`);
+//       await new Promise((resolve) => setTimeout(resolve, 20000));
+
+//       const statusResponse = await axios.get(
+//         `https://api.piapi.ai/api/v1/task/${taskId}`,
+//         {
+//           headers: { "X-API-Key": process.env.FACE_SWAP_API_KEY },
+//         }
+//       );
+
+//       console.log("📡 Face Swap Status:", statusResponse.data);
+
+//       if (statusResponse.data?.data?.status === "completed") {
+//         swappedImageUrl = statusResponse.data.data.output.image_url;
+//         break;
+//       }
+//     }
+
+//     if (!swappedImageUrl) throw new Error("Face swap not completed");
+
+//     console.log("🎭 Face swap successful! Image URL:", swappedImageUrl);
+
+//     // Save the generated dream to the database
+//     const dream = new Dream({ title, userId, imageUrls: [swappedImageUrl] });
+//     await dream.save();
+//     console.log("💾 Dream saved to database:", dream);
+
+//     res.status(201).json({
+//       message: "Dream generated successfully",
+//       image: swappedImageUrl,
+//       task_id: taskId,
+//       dream,
+//     });
+//   } catch (error) {
+//     console.error("🚨 Error:", error);
+//     res.status(500).json({ error: error.message });
+//   } finally {
+//     // Cleanup: Delete temporary file
+//     if (tempImagePath && fs.existsSync(tempImagePath)) {
+//       fs.unlinkSync(tempImagePath);
+//       console.log("🗑️ Temporary file deleted:", tempImagePath);
+//     }
+//   }
+// };
+
 export const generateDream = async (req, res) => {
   console.log("📩 Received request to generate dream...");
 
@@ -963,19 +1104,12 @@ export const generateDream = async (req, res) => {
   const userImageUrl = req.file?.location; // S3 URL
   console.log("Incoming File:", req.file);
 
-  console.log("Final Payload Before Saving:", req.body);
-
-  console.log("📝 Incoming Data:", { title, userId, userImageUrl });
-
   if (!title || !userId || !userImageUrl) {
     console.error("🚨 Missing Fields:", { title, userId, userImageUrl });
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  let tempImagePath = null;
-
   try {
-    // Generate AI Image
     console.log("🖼️ Generating AI Image...");
     const generatedImages = await generateMultipleImages(title);
     if (!generatedImages.length) throw new Error("AI Image generation failed");
@@ -983,29 +1117,8 @@ export const generateDream = async (req, res) => {
     const targetImageUrl = generatedImages[0];
     console.log("✅ AI Generated Image URL:", targetImageUrl);
 
-    // Download user image from S3
-    console.log("⬇️ Downloading user image from:", userImageUrl);
-    const imageResponse = await axios.get(userImageUrl, {
-      responseType: "arraybuffer",
-    });
-
-    // tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
-    // fs.writeFileSync(tempImagePath, imageResponse.data);
-    // console.log("📂 User image saved at:", tempImagePath);
-
-    const fileKey = `processed_images/user_image_${Date.now()}.jpg`;
-    const userImageBuffer = Buffer.from(imageResponse.data);
-    const userImageUrlFromS3 = await uploadToS3(
-      userImageBuffer,
-      fileKey,
-      "image/jpeg"
-    );
-    console.log("✅ Uploaded user image to S3:", userImageUrlFromS3);
-
-    // Validate if file exists
-    if (!fs.existsSync(tempImagePath)) {
-      throw new Error("Failed to save user image for processing");
-    }
+    // Instead of saving to `/tmp`, just use the S3 URL
+    console.log("✅ Using S3 user image URL:", userImageUrl);
 
     // Prepare JSON Payload for Face Swap API
     const payload = {
@@ -1013,14 +1126,11 @@ export const generateDream = async (req, res) => {
       task_type: "face-swap",
       input: {
         target_image: targetImageUrl, // AI-generated image URL
-        swap_image: userImageUrl, // User image URL from S3
+        swap_image: userImageUrl, // Use S3 URL directly
       },
     };
 
-    console.log(
-      "📦 JSON Payload being sent:",
-      JSON.stringify(payload, null, 2)
-    );
+    console.log("📦 JSON Payload:", JSON.stringify(payload, null, 2));
 
     // Call Face Swap API
     console.log("🚀 Calling Face Swap API...");
@@ -1037,8 +1147,6 @@ export const generateDream = async (req, res) => {
 
     console.log("✅ Face Swap API Response:", swapResponse.data);
 
-    // const taskId = swapResponse?.data?.task_id;
-    // const taskId = swapResponse?.data?.task_id;
     const taskId = swapResponse?.data?.data?.task_id;
 
     if (!taskId) {
@@ -1048,7 +1156,7 @@ export const generateDream = async (req, res) => {
 
     console.log("🆔 Task ID:", taskId);
 
-    // Polling for face swap completion
+    // Poll for face swap completion
     let swappedImageUrl = null;
     for (let i = 0; i < 10; i++) {
       console.log(`⏳ Checking face swap status... Attempt ${i + 1}`);
@@ -1087,12 +1195,6 @@ export const generateDream = async (req, res) => {
   } catch (error) {
     console.error("🚨 Error:", error);
     res.status(500).json({ error: error.message });
-  } finally {
-    // Cleanup: Delete temporary file
-    if (tempImagePath && fs.existsSync(tempImagePath)) {
-      fs.unlinkSync(tempImagePath);
-      console.log("🗑️ Temporary file deleted:", tempImagePath);
-    }
   }
 };
 
