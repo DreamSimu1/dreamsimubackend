@@ -989,9 +989,18 @@ export const generateDream = async (req, res) => {
       responseType: "arraybuffer",
     });
 
-    tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
-    fs.writeFileSync(tempImagePath, imageResponse.data);
-    console.log("📂 User image saved at:", tempImagePath);
+    // tempImagePath = path.join("/tmp", `user_image_${Date.now()}.jpg`);
+    // fs.writeFileSync(tempImagePath, imageResponse.data);
+    // console.log("📂 User image saved at:", tempImagePath);
+
+    const fileKey = `processed_images/user_image_${Date.now()}.jpg`;
+    const userImageBuffer = Buffer.from(imageResponse.data);
+    const userImageUrlFromS3 = await uploadToS3(
+      userImageBuffer,
+      fileKey,
+      "image/jpeg"
+    );
+    console.log("✅ Uploaded user image to S3:", userImageUrlFromS3);
 
     // Validate if file exists
     if (!fs.existsSync(tempImagePath)) {
@@ -1504,18 +1513,36 @@ const downloadFileFromS3 = async (bucket, key) => {
 // if (!fs.existsSync(processedDir)) {
 //   fs.mkdirSync(processedDir, { recursive: true });
 // }
-const uploadToS3 = async (filePath, key) => {
-  const fileStream = fs.createReadStream(filePath);
+// const uploadToS3 = async (filePath, key) => {
+//   const fileStream = fs.createReadStream(filePath);
+//   const uploadParams = {
+//     Bucket: "eduprosolution",
+//     Key: key,
+//     Body: fileStream,
+//     ContentType: "image/png", // Ensure correct content type
+//   };
+
+//   const uploadCommand = new PutObjectCommand(uploadParams);
+//   await s3.send(uploadCommand);
+//   return `https://eduprosolution.s3.eu-north-1.amazonaws.com/${key}`;
+// };
+
+const uploadToS3 = async (buffer, key, mimetype) => {
   const uploadParams = {
     Bucket: "eduprosolution",
     Key: key,
-    Body: fileStream,
-    ContentType: "image/png", // Ensure correct content type
+    Body: buffer,
+    ContentType: mimetype,
   };
 
-  const uploadCommand = new PutObjectCommand(uploadParams);
-  await s3.send(uploadCommand);
-  return `https://eduprosolution.s3.eu-north-1.amazonaws.com/${key}`;
+  try {
+    const data = await s3.send(new PutObjectCommand(uploadParams));
+    console.log("✅ Successfully uploaded to S3:", key);
+    return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  } catch (error) {
+    console.error("🚨 Error uploading to S3:", error);
+    throw error;
+  }
 };
 
 // Remove background function
