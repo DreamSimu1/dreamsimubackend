@@ -8,7 +8,7 @@ import {
   getTemplateVisionById,
   getTemplateVisions,
   getTemplateVisionsBoard,
-  RemoveBg,
+  // RemoveBg,
   requestFaceSwap,
   saveTemplateVision,
 } from "../controller/aiController.js";
@@ -60,7 +60,7 @@ router.post(
 
 // const upload = multer({ storage: multer.memoryStorage() }); // or multer-s3
 
-router.post("/remove-bg", upload.single("image"), authenticateUser, RemoveBg);
+// router.post("/remove-bg", upload.single("image"), authenticateUser, RemoveBg);
 
 router.post("/create-template-vision", authenticateUser, saveTemplateVision);
 

@@ -1500,10 +1500,10 @@ const downloadFileFromS3 = async (bucket, key) => {
   await pipeline(Body, writeStream);
   return tempFilePath;
 };
-const processedDir = "/tmp/processed_dreams";
-if (!fs.existsSync(processedDir)) {
-  fs.mkdirSync(processedDir, { recursive: true });
-}
+// const processedDir = "/tmp/processed_dreams";
+// if (!fs.existsSync(processedDir)) {
+//   fs.mkdirSync(processedDir, { recursive: true });
+// }
 const uploadToS3 = async (filePath, key) => {
   const fileStream = fs.createReadStream(filePath);
   const uploadParams = {
@@ -1521,84 +1521,84 @@ const uploadToS3 = async (filePath, key) => {
 // Remove background function
 
 // ✅ Main RemoveBg function
-export const RemoveBg = async (req, res) => {
-  try {
-    console.log("Received file:", req.file);
-    if (!req.file) return res.status(400).json({ error: "No image uploaded" });
+// export const RemoveBg = async (req, res) => {
+//   try {
+//     console.log("Received file:", req.file);
+//     if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
-    const bucketName = "eduprosolution"; // ✅ Define bucketName here
-    const fileUrl =
-      req.file.location || `https://s3.amazonaws.com/${bucketName}/${fileKey}`;
-    const fileKey = req.file.key;
-    console.log("File URL:", fileUrl);
-    console.log("File Key:", fileKey);
+//     const bucketName = "eduprosolution"; // ✅ Define bucketName here
+//     const fileUrl =
+//       req.file.location || `https://s3.amazonaws.com/${bucketName}/${fileKey}`;
+//     const fileKey = req.file.key;
+//     console.log("File URL:", fileUrl);
+//     console.log("File Key:", fileKey);
 
-    // Step 1: Download image from S3
-    const tempFilePath = await downloadFileFromS3(bucketName, fileKey);
-    console.log("Temporary File Path:", tempFilePath);
+//     // Step 1: Download image from S3
+//     const tempFilePath = await downloadFileFromS3(bucketName, fileKey);
+//     console.log("Temporary File Path:", tempFilePath);
 
-    // Step 2: Send image to Remove.bg API
-    const formData = new FormData();
-    formData.append("image_file", fs.createReadStream(tempFilePath));
-    formData.append("size", "auto");
-    formData.append("format", "png");
+//     // Step 2: Send image to Remove.bg API
+//     const formData = new FormData();
+//     formData.append("image_file", fs.createReadStream(tempFilePath));
+//     formData.append("size", "auto");
+//     formData.append("format", "png");
 
-    const response = await axios.post(
-      "https://api.remove.bg/v1.0/removebg",
-      formData,
-      {
-        headers: {
-          "X-Api-Key": REMOVE_BG_API_KEY,
-          ...formData.getHeaders(),
-        },
-        responseType: "arraybuffer",
-      }
-    );
+//     const response = await axios.post(
+//       "https://api.remove.bg/v1.0/removebg",
+//       formData,
+//       {
+//         headers: {
+//           "X-Api-Key": REMOVE_BG_API_KEY,
+//           ...formData.getHeaders(),
+//         },
+//         responseType: "arraybuffer",
+//       }
+//     );
 
-    console.log("✅ Background removed successfully");
+//     console.log("✅ Background removed successfully");
 
-    // Step 3: Save Remove.bg processed image
-    const processedFilePath = `/tmp/processed_${Date.now()}_${
-      path.parse(fileKey).name
-    }.png`;
-    fs.writeFileSync(processedFilePath, response.data);
+//     // Step 3: Save Remove.bg processed image
+//     const processedFilePath = `/tmp/processed_${Date.now()}_${
+//       path.parse(fileKey).name
+//     }.png`;
+//     fs.writeFileSync(processedFilePath, response.data);
 
-    // Step 4: Ensure image has transparency using Sharp
-    const finalOutputPath = `/tmp/final_${Date.now()}_${
-      path.parse(fileKey).name
-    }.png`;
-    await sharp(processedFilePath)
-      .png({ quality: 100 })
-      .toFile(finalOutputPath);
+//     // Step 4: Ensure image has transparency using Sharp
+//     const finalOutputPath = `/tmp/final_${Date.now()}_${
+//       path.parse(fileKey).name
+//     }.png`;
+//     await sharp(processedFilePath)
+//       .png({ quality: 100 })
+//       .toFile(finalOutputPath);
 
-    console.log("✅ Sharp processing completed");
+//     console.log("✅ Sharp processing completed");
 
-    // Step 5: Upload final transparent PNG to S3
-    const processedImageUrl = await uploadToS3(
-      finalOutputPath,
-      `processed/${Date.now()}_${path.parse(fileKey).name}.png`
-    );
-    console.log("📤 Processed image uploaded to S3:", processedImageUrl);
+//     // Step 5: Upload final transparent PNG to S3
+//     const processedImageUrl = await uploadToS3(
+//       finalOutputPath,
+//       `processed/${Date.now()}_${path.parse(fileKey).name}.png`
+//     );
+//     console.log("📤 Processed image uploaded to S3:", processedImageUrl);
 
-    // Cleanup
-    fs.unlinkSync(tempFilePath);
-    fs.unlinkSync(processedFilePath);
-    fs.unlinkSync(finalOutputPath);
-    console.log("🗑️ Temporary files deleted");
+//     // Cleanup
+//     fs.unlinkSync(tempFilePath);
+//     fs.unlinkSync(processedFilePath);
+//     fs.unlinkSync(finalOutputPath);
+//     console.log("🗑️ Temporary files deleted");
 
-    // Step 6: Delete original file from S3
-    await s3.send(
-      new DeleteObjectCommand({ Bucket: bucketName, Key: fileKey })
-    );
-    console.log("🗑️ Original file deleted from S3:", fileKey);
+//     // Step 6: Delete original file from S3
+//     await s3.send(
+//       new DeleteObjectCommand({ Bucket: bucketName, Key: fileKey })
+//     );
+//     console.log("🗑️ Original file deleted from S3:", fileKey);
 
-    // Return processed image URL
-    res.json({ imagePath: processedImageUrl });
-  } catch (error) {
-    console.error("🚨 Error removing background:", error.message);
-    res.status(500).json({ error: "Failed to process image" });
-  }
-};
+//     // Return processed image URL
+//     res.json({ imagePath: processedImageUrl });
+//   } catch (error) {
+//     console.error("🚨 Error removing background:", error.message);
+//     res.status(500).json({ error: "Failed to process image" });
+//   }
+// };
 
 export const requestFaceSwap = async (req, res) => {
   try {
