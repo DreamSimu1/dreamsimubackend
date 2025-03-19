@@ -1527,6 +1527,23 @@ const downloadFileFromS3 = async (bucket, key) => {
 //   return `https://eduprosolution.s3.eu-north-1.amazonaws.com/${key}`;
 // };
 
+// const uploadToS3 = async (buffer, key, mimetype) => {
+//   const uploadParams = {
+//     Bucket: "eduprosolution",
+//     Key: key,
+//     Body: buffer,
+//     ContentType: mimetype,
+//   };
+
+//   try {
+//     const data = await s3.send(new PutObjectCommand(uploadParams));
+//     console.log("✅ Successfully uploaded to S3:", key);
+//     return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+//   } catch (error) {
+//     console.error("🚨 Error uploading to S3:", error);
+//     throw error;
+//   }
+// };
 const uploadToS3 = async (buffer, key, mimetype) => {
   const uploadParams = {
     Bucket: "eduprosolution",
@@ -1536,7 +1553,7 @@ const uploadToS3 = async (buffer, key, mimetype) => {
   };
 
   try {
-    const data = await s3.send(new PutObjectCommand(uploadParams));
+    await s3.send(new PutObjectCommand(uploadParams)); // No need to store the result
     console.log("✅ Successfully uploaded to S3:", key);
     return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
   } catch (error) {
